@@ -27,10 +27,10 @@ class Mobile:
         2D マップ上のオブジェクトの初期情報をインスタンス変数へ格納する。
         引数：
             id                      Marvelmind モバイルビーコンID
-            x                       対象オブジェクトの開始時点のX座標
-            y                       対象オブジェクトの開始時点のY座標
+            x                       対象オブジェクトの開始時点のX座標(箱庭座標系)
+            y                       対象オブジェクトの開始時点のY座標(箱庭座標系)
             angle                   画像左下を原点右をX軸、上をY軸としたときの角度(単位：度)
-            dt                      0.05 Hz
+            dt                      実行間隔(秒)、1/周波数(Hz)を指定
             max_voltage             印加電圧の最大値(V)
             tn_gradient             モーターの公表されているT-N特性の勾配（印加電圧最大時）
             rv_gradient             ギヤ駆動時の勾配：回転数/印加電圧
@@ -39,8 +39,8 @@ class Mobile:
             transmission_efficiency ギアの伝達効率
             tread                   左右両輪間の距離
             thread_to_trail         前輪間中心座標から降臨中心までの距離
-            gc_x                    重心X座標
-            gc_y                    重心Y座標
+            gc_x                    重心X座標(箱庭座標系)
+            gc_y                    重心Y座標(箱庭座標系)
             weight                  空荷時重量
             offset_x                前輪間中心座標からセンサ計測値のオフセットX座標
             offset_y                前輪間中心座標からセンサ計測値のオフセットY座標
