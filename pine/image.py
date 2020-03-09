@@ -58,9 +58,10 @@ class DefaultConfig:
         # Stationary beacon 4基の箱庭座標系における設置位置 (in studs)
         self.beacon_address, self.beacon_position = DefaultConfig.init_beacon_data(
             '1b1b.txt' if cfg is None else str(cfg.DATANAME_BEACON))
-        print('[DefaultConfig]')
-        print(self.beacon_address)
-        print(self.beacon_position)
+        if self.debug:
+            print('[DefaultConfig] beacon data')
+            print(self.beacon_address)
+            print(self.beacon_position)
 
     @staticmethod
     def init_weight_data(dataname):
@@ -199,6 +200,50 @@ class MapImageCreator:
         if self.debug:
             print('[MapImageCreator] init completed')
 
+    def update(self):
+        # angle
+        y_length = self.head_position[1, 0] - self.tail_position[1, 0]
+        x_length = self.head_position[0, 0] - self.tail_position[0, 0]
+        angle = math.degrees(math.atan2(y_length, x_length))
+        if self.debug:
+            print('[MapImageCreator] atan2:(%f,%f,%f)' % (y_length, x_length, angle))
+
+        if self.debug:
+            print("[MapImageCreator] head adr:{:d}".format(self.head_address))
+            print(self.head_position)
+            print("[MapImageCreator] tail sdr:{:d}".format(self.tail_address))
+            print(self.tail_position)
+
+        pos_x = self.head_position[0, 0]
+        pos_y = self.head_position[1, 0]
+        angle = 90 - angle
+        print('[MapImageCreator] update pos_x=%f, pos_y=%f, angle=%f' % (pos_x, pos_y, angle))
+        '''
+        if pos_x != np.nan and pos_y != np.nan and angle != np.nan:
+            # 切り出していないフルサイズのビジョン画面にエージェントを描画する
+            next_vision = vision.copy()
+            for b in mobile.loader:
+                b.position[0, 0], b.position[1, 0] = pos_x, pos_y
+                b.angle = angle
+                b.draw(vision=next_vision)
+
+            # エージェントを描画したフルサイズのビジョン画面をそのときのエージェント位置に合わせて切り出し、入力画像サイズに成形する
+            # これがローダーカメラ入力の画像
+            next_vision_cropped_resized = get_torch_view(next_vision, 60, mobile.loader[2].position[0, 0],
+                                                         mobile.loader[2].position[1, 0], mobile.loader[2].angle,
+                                                         vision_scale, 160, 120, vision_margin_x, vision_margin_y)
+
+            # テスト表示画面用に変換する
+            next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
+
+            # テスト表示キャンバスに張替
+            w.delete("vision1")
+            w.create_image(vision_margin_x, vision_margin_y, image=next_vision_img, anchor=NW, tag="vision1")
+            #master.update()
+        else:
+            print('!!!!! position or angle is nan !!!!!')
+        '''
+
     def update_head_position(self):
         self.head_distances = self.head_hedge.distances()
         self.head_address, self.head_position = self.updatedMobileBeaconPosition(self.head_distances)
@@ -226,12 +271,14 @@ class MapImageCreator:
         # PIL Imageオブジェクトを作成、ローカル変数imageへ格納
 
         # image is PIL image
-        print('[MapImageCreator] head adr:{}, pos:({}, {}, {})'.format(
-            str(self.head_address),
-            str(self.head_position[0]), str(self.head_position[1]), str(self.head_position[2])))
-        print('[MapImageCreator] tail adr:{}, pos:({}, {}, {})'.format(
-            str(self.tail_address),
-            str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
+        if self.debug:
+            print('[MapImageCreator] head adr:{}, pos:({}, {}, {})'.format(
+                str(self.head_address),
+                str(self.head_position[0]), str(self.head_position[1]), str(self.head_position[2])))
+            print('[MapImageCreator] tail adr:{}, pos:({}, {}, {})'.format(
+                str(self.tail_address),
+                str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
+        self.update()
         return dk.utils.img_to_arr(self.image)
     
     def shutdown(self):
