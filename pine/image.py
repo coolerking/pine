@@ -6,8 +6,8 @@ Donkeycar パーツクラスを提供する。
 """
 import donkeycar as dk
 import numpy as np
+from time import sleep
 from marvelmind import MarvelmindHedge
-from AgentView import update_head_position, update_tail_position, draw, next_vision_img
 
 class DefaultConfig:
     """
@@ -43,18 +43,20 @@ class DefaultConfig:
         self.VISION_SIZE_Y = 120 if cfg is None else cfg.IMAGE_H
         self.GRID_SIZE = 1 if cfg is None else cfg.GRID_SIZE
 
+        self.WAIT_INTERVAL = 0.1 if cfg is None else float(cfg.WAIT_INTERVAL)
+
         # 連結されたノード間の重み付け。移動コストによるコース選択判定に利用す。
-        self.weight_list = init_weight_data(
-            '1b1w.txt' if cfg is None else str(cfg.DATANAME_WEIGHT))
+        #self.weight_list = DefaultConfig.init_weight_data(
+        #    '1b1w.txt' if cfg is None else str(cfg.DATANAME_WEIGHT))
         # 各ノードの座標データ
-        self.node_list = init_node_data(
-            '1b1n.txt' if cfg is None else str(cfg.DATANAME_NODE))
+        #self.node_list = DefaultConfig.init_node_data(
+        #    '1b1n.txt' if cfg is None else str(cfg.DATANAME_NODE))
         # landscape（152×120画像）の各画素ごとの走行抵抗値（転がり摩擦係数）
-        self.resistence_list = init_resistance_data(
-            'RRMap2.txt' if cfg is None else str(cfg.DATANAME_RRMAP), self.NUM_OF_GRID_X) 
+        #self.resistence_list = DefaultConfig.init_resistance_data(
+        #    'RRMap2.txt' if cfg is None else str(cfg.DATANAME_RRMAP), self.NUM_OF_GRID_X) 
         # Stationary beacon 4基の箱庭座標系における設置位置 (in studs)
-        self.beacon_address, self.beacon_position = init_beacon_data(
-            '1b1b.txt' if cfg is None else str(cfg.DATANAME_BEACON))
+        #self.beacon_address, self.beacon_position = DefaultConfig.init_beacon_data(
+        #    '1b1b.txt' if cfg is None else str(cfg.DATANAME_BEACON))
 
     @staticmethod
     def init_weight_data(dataname):
@@ -162,15 +164,24 @@ class MapImageCreator:
         self.cfg = DefaultConfig(cfg=cfg)
         self.head_hedge = MarvelmindHedge(
             tty=self.cfg.HEAD_HEDGE_TTY,
-            recieveUltrasoundRawDataCallback=update_head_position)
+            recieveUltrasoundRawDataCallback=self.update_head_position)
+        self.head_hedge.start()
         self.tail_hedge = MarvelmindHedge(
             tty=self.cfg.TAIL_HEDGE_TTY,
-            recieveUltrasoundRawDataCallback=update_tail_position)
+            recieveUltrasoundRawDataCallback=self.update_tail_position)
+        self.tail_hedge.start()
         self.image = np.zeros((120, 160,3))
+        sleep(self.cfg.WAIT_INTERVAL)
+
+    def update_head_position(self):
+        self.head_distances = self.head_hedge.distances()
+
+    def update_tail_position(self):
+        self.head_distances = self.tail_hedge.distances()
 
     def run_threaded(self):
-        draw()
-        self.image = next_vision_img
+
+        #self.image = next_vision_img
         return dk.utils.img_to_arr(self.image)
 
 
@@ -193,7 +204,9 @@ class MapImageCreator:
         """
         # ToDo
         # スレッドを使っているなら終了処理をここにかく
-        pass
+        self.head_hedge.stop()
+        self.tail_hedge.stop()
+        sleep(self.cfg.WAIT_INTERVAL)
 
 
 if __name__ == '__main__':
