@@ -175,9 +175,13 @@ class MapImageCreator:
 
     def update_head_position(self):
         self.head_distances = self.head_hedge.distances()
+        print('[Head]')
+        print(self.head_distances)
 
     def update_tail_position(self):
-        self.head_distances = self.tail_hedge.distances()
+        self.tail_distances = self.tail_hedge.distances()
+        print('[Tail]')
+        print(self.tail_distances)
 
     def run_threaded(self):
 
@@ -218,6 +222,6 @@ if __name__ == '__main__':
         def run(self, image_array):
             print('image_array = {}'.format(str(image_array)))
 
-    V.add(PrintImage(), inputs=['cam/image_array'])
+    #V.add(PrintImage(), inputs=['cam/image_array'])
 
     V.start(rate_hz=20, max_loop_count=10000)
