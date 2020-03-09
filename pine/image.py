@@ -172,6 +172,10 @@ class MapImageCreator:
         self.tail_hedge.start()
         self.image = np.zeros((120, 160,3))
         sleep(self.cfg.WAIT_INTERVAL)
+        print('[Head] init')
+        print(self.head_distances)
+        print('[Tail] init')
+        print(self.tail_distances)
 
     def update_head_position(self):
         self.head_distances = self.head_hedge.distances()
