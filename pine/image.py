@@ -185,12 +185,23 @@ class MapImageCreator:
             if self.debug:
                 print('[MapImageCreator] no distances yet, wait {} sec.'.format(str(self.cfg.WAIT_INTERVAL)))
             sleep(self.cfg.WAIT_INTERVAL)
+        if self.cfg.HEAD_HEDGE_ID == self.head_address and self.cfg.TAIL_HEDGE_ID == self.tail_address:
+            if self.debug:
+                print('[MapImageCreator] hedge ids configuration match')
+        else:
+            if self.debug:
+                print('[MapImageCreator] head conf id:{} actual:{}'.format(str(self.cfg.HEAD_HEDGE_ID), str(self.head_address)))
+                print('[MapImageCreator] tail conf id:{} actual:{}'.format(str(self.cfg.TAIL_HEDGE_ID), str(self.tail_address)))
+            raise ValueError('hedge ids configuration unmatch')
         if self.debug:
             print('[MapImageCreator] init completed')
 
     def update_head_position(self):
         self.head_distances = self.head_hedge.distances()
         self.head_address, self.head_position = self.updatedMobileBeaconPosition(self.head_distances)
+        self.head_position[0, 0] = round(self.head_position[0, 0], 1)
+        self.head_position[1, 0] = round(self.head_position[1, 0], 1)
+        self.head_position[2, 0] = round(self.head_position[2, 0], 1)
         if self.debug:
             print('[Head]')
             print(self.head_distances)
@@ -198,6 +209,9 @@ class MapImageCreator:
     def update_tail_position(self):
         self.tail_distances = self.tail_hedge.distances()
         self.tail_address, self.tail_position = self.updatedMobileBeaconPosition(self.tail_distances)
+        self.tail_position[0, 0] = round(self.tail_position[0, 0], 1)
+        self.tail_position[1, 0] = round(self.tail_position[1, 0], 1)
+        self.tail_position[2, 0] = round(self.tail_position[2, 0], 1)
         if self.debug:
             print('[Tail]')
             print(self.tail_distances)
