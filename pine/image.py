@@ -58,6 +58,9 @@ class DefaultConfig:
         # Stationary beacon 4基の箱庭座標系における設置位置 (in studs)
         self.beacon_address, self.beacon_position = DefaultConfig.init_beacon_data(
             '1b1b.txt' if cfg is None else str(cfg.DATANAME_BEACON))
+        print('[DefaultConfig]')
+        print(self.beacon_address)
+        print(self.beacon_position)
 
     @staticmethod
     def init_weight_data(dataname):
@@ -223,8 +226,12 @@ class MapImageCreator:
         # PIL Imageオブジェクトを作成、ローカル変数imageへ格納
 
         # image is PIL image
-        print('[MapImageCreator] head adr:{}, pos:{}'.format(str(self.head_address), str(self.head_position)))
-        print('[MapImageCreator] tail adr:{}, pos:{}'.format(str(self.tail_address), str(self.tail_position)))
+        print('[MapImageCreator] head adr:{}, pos:({}, {}, {})'.format(
+            str(self.head_address),
+            str(self.head_position[0]), str(self.head_position[1]), str(self.head_position[2])))
+        print('[MapImageCreator] tail adr:{}, pos:({}, {}, {})'.format(
+            str(self.tail_address),
+            str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
         return dk.utils.img_to_arr(self.image)
     
     def shutdown(self):
