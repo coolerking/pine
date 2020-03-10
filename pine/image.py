@@ -326,7 +326,11 @@ class MapImageCreator:
             self.cfg.BASE_MARGIN, self.cfg.LADDER_MARGIN, 1).create_1x1_landscape_vision_img_wide4(
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
                 CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
+        print('vision org array')
+        print(dk.utils.img_to_arr(self.vision))
         self.vision = self.vision_img_org.copy()
+        print('vision array')
+        print(dk.utils.img_to_arr(self.vision))
         self.next_vision_cropped_resized = None
         self.image_array = np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
         self.head_hedge = MarvelmindHedge(
