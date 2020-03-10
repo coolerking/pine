@@ -327,7 +327,7 @@ class MapImageCreator:
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
                 CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
         print('vision org array')
-        print(dk.utils.img_to_arr(self.vision))
+        print(dk.utils.img_to_arr(self.vision_img_org))
         self.vision = self.vision_img_org.copy()
         print('vision array')
         print(dk.utils.img_to_arr(self.vision))
