@@ -395,7 +395,9 @@ class MapImageCreator:
                 self.mobile.loader[2].angle,
                 self.cfg.VISION_SCALE, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Y,
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y)
-
+            print('[MapImageCreator] next_vision_cropped_resized')
+            print(self.next_vision_cropped_resized)
+            print(type(self.next_vision_cropped_resized))
             # テスト表示画面用に変換する
             #self.next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
 
