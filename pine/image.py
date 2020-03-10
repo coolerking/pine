@@ -309,11 +309,7 @@ class MapImageCreator:
         self.weight_list = CourseUtils.init_weight_data(self.cfg.WEIGHT_LIST_PATH)
         self.node_list = CourseUtils.init_node_data(self.cfg.NODE_LIST_PATH)
         self.beacon_address, self.beacon_position = CourseUtils.init_beacon_data(self.cfg.BEACON_LIST_PATH)
-        print('beacon address')
-        print(self.beacon_address)
-        print('beacon position')
-        print(self.beacon_position)
-        print(self.cfg.BEACON_LIST_PATH)
+
         self.color_list = CourseUtils.get_color_dict()
 
         self.rrmap_vision_img =  ResistanceMap(
@@ -330,10 +326,11 @@ class MapImageCreator:
             self.cfg.BASE_MARGIN, self.cfg.LADDER_MARGIN, 1).create_1x1_landscape_vision_img_wide4(
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
                 CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
-        print('vision_img_org')
-        print(self.vision_img_org)
-        print(type(self.vision_img_org))
         self.vision = self.vision_img_org.copy()
+        print('vision array')
+        print(self.vision)
+        print(type(self.vision))
+        print(dk.utils.img_to_arr(self.vision))
         self.next_vision_cropped_resized = None
         self.image_array = np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
         self.head_hedge = MarvelmindHedge(
