@@ -335,6 +335,7 @@ class MapImageCreator:
         print(type(self.vision_img_org))
         self.vision = self.vision_img_org.copy()
         self.next_vision_cropped_resized = None
+        self.image_array = np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
         self.head_hedge = MarvelmindHedge(
             tty=self.cfg.HEAD_HEDGE_TTY,
             recieveUltrasoundRawDataCallback=self.update_head_position)
@@ -404,6 +405,11 @@ class MapImageCreator:
                 print('[MapImageCreator] next_vision_cropped_resized updated')
                 print(self.next_vision_cropped_resized)
                 print(type(self.next_vision_cropped_resized))
+            self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
+            #if self.debug:
+            print('[MapImageCreator] image_array')
+            print(self.image_array)
+            print(type(self.image_array))
             # テスト表示画面用に変換する
             #self.next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
 
@@ -452,15 +458,7 @@ class MapImageCreator:
                 str(self.tail_address),
                 str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
         self.update()
-        if self.next_vision_cropped_resized is None:
-            print('[MapImageCreator] self.next_vision_cropped_resized is none')
-            return np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
-        image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
-        print('[MapImageCreator] run()')
-        print(image_array)
-        print(type(image_array))
-        print(image_array.shape)
-        return dk.utils.img_to_arr(self.next_vision_cropped_resized)
+        return self.image_array
     
     def shutdown(self):
         """
