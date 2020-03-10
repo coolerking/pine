@@ -328,7 +328,11 @@ class MapImageCreator:
         self.weight_list = CourseUtils.init_weight_data(self.cfg.WEIGHT_LIST_PATH)
         self.node_list = CourseUtils.init_node_data(self.cfg.NODE_LIST_PATH)
         self.beacon_address, self.beacon_position = CourseUtils.init_beacon_data(self.cfg.BEACON_LIST_PATH)
-
+        print('beacon address')
+        print(self.beacon_address)
+        print('beacon position')
+        print(self.beacon_position)
+        print(self.cfg.BEACON_LIST_PATH)
         self.color_list = CourseUtils.get_color_dict()
 
         self.rrmap_vision_img =  ResistanceMap(
