@@ -352,8 +352,9 @@ class MapImageCreator:
                 print('[MapImageCreator] head conf id:{} actual:{}'.format(str(self.cfg.HEAD_HEDGE_ID), str(self.head_address)))
                 print('[MapImageCreator] tail conf id:{} actual:{}'.format(str(self.cfg.TAIL_HEDGE_ID), str(self.tail_address)))
             raise ValueError('hedge ids configuration unmatch')
-        if self.debug:
-            print('[MapImageCreator] init completed')
+        self.update()
+        print('[MapImageCreator] self.next_vision_cropped_resized is {}'.format(type(self.next_vision_cropped_resized)))
+        print('[MapImageCreator] init completed')
 
     def update_pose(self):
         # angle
@@ -395,9 +396,10 @@ class MapImageCreator:
                 self.mobile.loader[2].angle,
                 self.cfg.VISION_SCALE, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Y,
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y)
-            print('[MapImageCreator] next_vision_cropped_resized')
-            print(self.next_vision_cropped_resized)
-            print(type(self.next_vision_cropped_resized))
+            if self.debug:
+                print('[MapImageCreator] next_vision_cropped_resized updated')
+                print(self.next_vision_cropped_resized)
+                print(type(self.next_vision_cropped_resized))
             # テスト表示画面用に変換する
             #self.next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
 
