@@ -354,6 +354,7 @@ class MapImageCreator:
             raise ValueError('hedge ids configuration unmatch')
         self.update()
         print('[MapImageCreator] self.next_vision_cropped_resized is {}'.format(type(self.next_vision_cropped_resized)))
+        print(self.next_vision_cropped_resized)
         print('[MapImageCreator] init completed')
 
     def update_pose(self):
