@@ -447,6 +447,7 @@ class MapImageCreator:
                 str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
         self.update()
         if self.next_vision_cropped_resized is None:
+            print('[MapImageCreator] self.next_vision_cropped_resized is none')
             return np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
         return dk.utils.img_to_arr(self.next_vision_cropped_resized)
     
