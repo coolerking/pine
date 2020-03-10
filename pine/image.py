@@ -381,7 +381,7 @@ class MapImageCreator:
 
     def update(self):
         pos_x, pos_y, angle = self.update_pose()
-        
+        print('[MapImageCreator] update_pose() pos_x=%f, pos_y=%f, angle=%f' % (pos_x, pos_y, angle))
         if pos_x != np.nan and pos_y != np.nan and angle != np.nan:
             # 切り出していないフルサイズのビジョン画面にエージェントを描画する
             next_vision = self.vision.copy()
@@ -389,7 +389,8 @@ class MapImageCreator:
                 b.position[0, 0], b.position[1, 0] = pos_x, pos_y
                 b.angle = angle
                 b.draw(vision=next_vision)
-
+            print('next vision array')
+            print(dk.utils.img_to_arr(next_vision))
             # エージェントを描画したフルサイズのビジョン画面をそのときのエージェント位置に合わせて切り出し、入力画像サイズに成形する
             # これがローダーカメラ入力の画像
             self.next_vision_cropped_resized = self.get_torch_view(next_vision, 60, 
