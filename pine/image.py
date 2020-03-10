@@ -8,7 +8,11 @@ import donkeycar as dk
 import numpy as np
 import math
 from time import sleep
+from tkinter import NW
+from PIL import Image, ImageDraw, ImageTk
 from marvelmind import MarvelmindHedge
+
+from SpoolMobile import SpoolMobile, Landscape, ResistanceMap
 
 class DefaultConfig:
     """
@@ -29,39 +33,141 @@ class DefaultConfig:
         
         # 前方モバイルビーコン
         self.HEAD_HEDGE_ID = 6 if cfg is None else int(cfg.HEAD_HEDGE_ID) 
-        self.HEAD_HEDGE_TTY = '/dev/ttyACM0' if cfg is None else cfg.HEAD_HEDGE_TTY
+        self.HEAD_HEDGE_TTY = '/dev/ttyACM0' if cfg is None else str(cfg.HEAD_HEDGE_TTY)
 
         # 後方モバイルビーコン
         self.TAIL_HEDGE_ID = 5 if cfg is None else int(cfg.TAIL_HEDGE_ID)
-        self.TAIL_HEDGE_TTY = '/dev/ttyACM1' if cfg is None else cfg.TAIL_HEDGE_TTY
+        self.TAIL_HEDGE_TTY = '/dev/ttyACM1' if cfg is None else str(cfg.TAIL_HEDGE_TTY)
 
         # 箱庭倉庫俯瞰図サイズ
         self.NUM_OF_GRID_X = 152 if cfg is None else int(cfg.NUM_OF_GRID_X)
         self.NUM_OF_GRID_Y = 120 if cfg is None else int(cfg.NUM_OF_GRID_Y)
 
         # AIへの入力データサイズ
-        self.VISION_SIZE_X = 160 if cfg is None else cfg.IMAGE_W
-        self.VISION_SIZE_Y = 120 if cfg is None else cfg.IMAGE_H
-        self.GRID_SIZE = 1 if cfg is None else cfg.GRID_SIZE
+        self.VISION_SIZE_X = 160 if cfg is None else int(cfg.IMAGE_W)
+        self.VISION_SIZE_Y = 120 if cfg is None else int(cfg.IMAGE_H)
+        self.VISION_SIZE_Z = 3 if cfg is None else int(cfg.IMAGE_DEPTH)
+        self.GRID_SIZE = 1 if cfg is None else int(cfg.GRID_SIZE)
+
+        # フルサイズのビジョンイメージ
+        self.BASE_MARGIN = 4  # 基礎エリアのオフセット
+        self.LADDER_MARGIN = 8  # ラダーエリアのオフセット
+        self.VISION_SCALE = 4  # 入力画面として作成する画像の拡大率（整数倍）。1倍で152×120。
+
+        # テスト表示用のキャンバスの余白
+        self.VISION_MARGIN_X = 10
+        self.VISION_MARGIN_Y = 10
+
+
 
         self.WAIT_INTERVAL = 0.1 if cfg is None else float(cfg.WAIT_INTERVAL)
 
-        # 連結されたノード間の重み付け。移動コストによるコース選択判定に利用す。
-        #self.weight_list = DefaultConfig.init_weight_data(
-        #    '1b1w.txt' if cfg is None else str(cfg.DATANAME_WEIGHT))
+        # 連結されたノード間の重み付け。移動コストによるコース選択判定に利用
+        self.WEIGHT_LIST_PATH = '1b1w.txt' if cfg is None else str(cfg.WEIGHT_LIST_PATH)
+
         # 各ノードの座標データ
-        #self.node_list = DefaultConfig.init_node_data(
-        #    '1b1n.txt' if cfg is None else str(cfg.DATANAME_NODE))
+        self.NODE_LIST_PATH = '1b1n.txt' if cfg is None else str(cfg.NODE_LIST_PATH)
+
         # landscape（152×120画像）の各画素ごとの走行抵抗値（転がり摩擦係数）
-        #self.resistence_list = DefaultConfig.init_resistance_data(
-        #    'RRMap2.txt' if cfg is None else str(cfg.DATANAME_RRMAP), self.NUM_OF_GRID_X) 
+        self.RESISTANCE_LIST_PATH = 'RRMap2.txt' if cfg is None else str(cfg.RESISTANCE_LIST_PATH)
+
         # Stationary beacon 4基の箱庭座標系における設置位置 (in studs)
-        self.beacon_address, self.beacon_position = DefaultConfig.init_beacon_data(
-            '1b1b.txt' if cfg is None else str(cfg.DATANAME_BEACON))
-        if self.debug:
-            print('[DefaultConfig] beacon data')
-            print(self.beacon_address)
-            print(self.beacon_position)
+        self.BEACON_LIST_PATH = '1b1b.txt' if cfg is None else str(cfg.BEACON_LIST_PATH)
+
+        # vision用の走行抵抗マップ（バックグラウンド）出力パス
+        self.VISION_BACKGROUND_PATH = 'vision_map.jpg' if cfg is None else str(cfg.VISION_BACKGROUND_PATH)
+
+        # CourseUtilsクラスのget_course_node_data()の引数course_type値
+        self.COURSE_TYPE = 'INNER_CLOCKWISE' if cfg is None else str(cfg.COURSE_TYPE)
+
+class CourseUtils:
+    """
+    倉庫内コースに関する情報を提供するユーティリティクラス。
+    すべて静的メソッドで提供。
+    """
+
+    @staticmethod
+    def get_color_dict():
+        """
+        vision用の走行抵抗マップの色指定（辞書型）を取得する。
+        引数：
+            なし
+        戻り値：
+            vision用の走行抵抗マップの色指定（辞書型）
+        """
+        # 緑無地
+        return {0.001: '#00984C', 0.3: '#00984C', 0.002: '#00984C'}
+
+    @staticmethod
+    def get_course_node_data(course_type):
+        """
+        config.py/myconfig.py オブジェクトに定義されたCOURSE_TYPEに従って
+        コースデータを作成する。
+        引数：
+            course_type     COURSE_TYPE値（コースタイプ）
+        戻り値：
+            course_node_numbers         周回路に含まれるコーナーノードリスト
+            course_node_numbers_nodes   course_node_numbersに加えてコーナーノード間のすべてのノードを含むリスト
+        """
+        # 以下、AI_Pilotテスト用の周回コースのノードリスト ------------------------------------
+        # course_node_numbersは、周回路に含まれるコーナーノード　⇒　主にシミュレータのAuto_Pilot用
+        # course_node_numbers_nodesは、course_node_numbersに加えてコーナーノード間のすべてのノードを含む　⇒　主にローダーへの走路指示用
+        if course_type is None or course_type == 'INNER_CLOCKWISE':
+            # 内周/時計回り
+            course_node_numbers = [25, 37, 33, 29, 25, 37]  # inner clockwise
+            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 37]  # inner with existing nodes
+        elif course_type == 'INNER_COUNTER_CLOCKWISE':
+            # 内周/反時計回り
+            course_node_numbers = [25, 29, 33, 37, 25, 29]  # inner counter-clockwise
+            course_node_numbers_nodes = [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 25, 26]  # inner with existing nodes
+        elif course_type == 'U_TURN':
+            # Ｕターン
+            course_node_numbers = [25, 37, 33, 12, 7, 2, 25, 37]  # inner clockwise
+            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 25, 40]  # inner with existing nodes
+        elif course_type == 'I_TURN':
+            # Iターン 超信地旋回が必要
+            course_node_numbers = [25, 37, 33, 37, 25, 37]  # inner clockwise
+            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 34, 35, 36, 37, 38, 39, 40, 25, 40]
+        elif course_type == 'CONVEX_CLOCKWISE':
+            # 凸：時計回り
+            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 29, 25, 37]
+            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 40]
+        elif course_type == 'BIG_CONVEX_CLOCKWISE':
+            # big凸：時計回り
+            course_node_numbers = [1, 4, 39, 37, 33, 31, 16, 19, 1, 4]
+            course_node_numbers_nodes = [1, 2, 3, 4, 39, 38, 37, 36, 35, 34, 33, 32, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 1, 2]
+        elif course_type == 'CONVEX_INNER_CLOCKWISE':
+            # 内周＋車線変更　（凸x2：時計回り）
+            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 32, 15, 17, 30, 29, 25, 37]
+            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 15, 16, 17, 30, 29, 28, 27, 26, 25, 40]
+        elif course_type == 'CONVEX_INNER_CLOCKWISE2':
+            # 内周＋車線変更
+            course_node_numbers = [25, 37, 35, 10, 13, 19, 22, 27, 25, 37]
+            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 35, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 26, 25, 40]
+        elif course_type == 'CONVEX':
+            # 内外周＋車線変更
+            course_node_numbers = [1, 4, 39, 37, 35, 10, 13, 16, 31, 29, 27, 22, 1, 4]
+            course_node_numbers_nodes = [1, 2, 3, 4, 39, 38, 37, 36, 35, 10, 11, 12, 13, 14, 15, 16, 31, 30, 29, 28, 27, 22, 23, 24, 1, 2]
+        elif course_type == 'CONVEX_OUTER_CLOCKWISE':
+            course_node_numbers = [1, 7, 13, 19, 1, 7] # outer clockwise
+            course_node_numbers_nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 1, 2]
+        elif course_type == 'INNER_CLOCKWISE_LEFT_LONG':
+            course_node_numbers = [25, 37, 14, 18, 25, 37]  # inner 右に横長 clockwise
+            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 14, 15, 16, 17, 18, 29, 28, 27, 26, 25, 40]
+        elif course_type == 'CLOCKWISE':
+            course_node_numbers = [24, 37, 14, 19, 24, 37]  # inner & outer clockwise
+            course_node_numbers_nodes = [24, 25, 40, 39, 38, 37, 36, 35, 34, 33, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+        elif course_type == 'CLOCKWISE_HEIGHT':
+            # self.course_node_numbers_01 = [25, 37, 36, 9, 11, 34, 33, 29, 25, 37]
+            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 29, 28, 21, 23, 26, 25, 37] # tate clockwise
+            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 31, 30, 29, 28, 21, 22, 23, 26, 25, 40] # tate with nodes
+        elif course_type == 'CLOCKWISE_WIDTH':
+            course_node_numbers = [25, 40, 3, 5, 36, 37, 38, 32, 15, 17, 30, 29, 25, 40] # yoko clockwise
+            course_node_numbers_nodes = [25, 40, 3, 4, 5, 38, 37, 36, 35, 34, 33, 32, 15, 16, 17, 30, 29, 28, 27, 26, 25, 40]
+            # self.course_node_numbers = [25, 40, 3, 4, 39, 37, 35, 10, 11, 34, 33, 32, 15, 17, 30, 29, 28, 21, 23, 26, 25, 40]
+        else:
+            raise ValueError('[CourseUtils] course_type={} not supported'.format(str(course_type)))
+        return course_node_numbers, course_node_numbers_nodes
 
     @staticmethod
     def init_weight_data(dataname):
@@ -149,6 +255,22 @@ class DefaultConfig:
                 data[i,j] = sp[j+1]
         return data0, data
 
+    @staticmethod
+    def course_line(node_numbers, node_list):
+        """
+        走行経路ノードリストを取得する。
+        引数：
+            node_numbers        周回路に含まれるコーナーノードリスト
+            node_list           コース上の全ノードのリスト
+        戻り値：
+            走行経路ノードリスト(np.array型)
+        """
+        coordinates = []
+        mysterious_offset = [12, 12]
+        for i in range(len(node_numbers)):
+            coordinates.append(node_list[node_numbers[i] - 1] + mysterious_offset)
+        return np.array(coordinates)
+
 class MapImageCreator:
     """
     Marvrelmind ビーコンから取得したセンサデータをもとに
@@ -167,7 +289,7 @@ class MapImageCreator:
         # ToDo
         # スレッドを使う場合はここで開始処理をかく
         # スレッド処理でインスタンス変数 image にPIL Imageを書き込む
-        self.cfg = DefaultConfig(cfg=cfg)
+        self.cfg = DefaultConfig(cfg=cfg, debug=debug)
         self.debug = debug
         self.head_hedge = MarvelmindHedge(
             tty=self.cfg.HEAD_HEDGE_TTY,
@@ -197,10 +319,38 @@ class MapImageCreator:
                 print('[MapImageCreator] head conf id:{} actual:{}'.format(str(self.cfg.HEAD_HEDGE_ID), str(self.head_address)))
                 print('[MapImageCreator] tail conf id:{} actual:{}'.format(str(self.cfg.TAIL_HEDGE_ID), str(self.tail_address)))
             raise ValueError('hedge ids configuration unmatch')
+
+        self.course_node_numbers, self.course_node_numbers_nodes = CourseUtils.get_course_node_data(
+            course_type=self.cfg.COURSE_TYPE)
+
+        self.resistance_list = CourseUtils.init_resistance_data(
+            self.cfg.RESISTANCE_LIST_PATH, self.cfg.NUM_OF_GRID_X)
+        self.weight_list = CourseUtils.init_weight_data(self.cfg.WEIGHT_LIST_PATH)
+        self.node_list = CourseUtils.init_node_data(self.cfg.NODE_LIST_PATH)
+        self.beacon_address, self.beacon_position = CourseUtils.init_beacon_data(self.cfg.BEACON_LIST_PATH)
+
+        self.color_list = CourseUtils.get_color_dict()
+
+        self.rrmap_vision_img =  ResistanceMap(
+            self.cfg.RESISTANCE_LIST_PATH, self.color_list).generateImageFile(self.cfg.VISION_BACKGROUND_PATH)
+
+        self.mobile = SpoolMobile(
+            6, 28, 92, 180, 0.05, 0, 0, 0, 0, 0, 0, 10.625, 13.78, 1, 0, -6, 1000, 0, 8, 
+            self.resistance_list, 1, 0, 0, 
+            self.cfg.NUM_OF_GRID_X, self.cfg.NUM_OF_GRID_Y, self.cfg.GRID_SIZE,
+            None, self.cfg.VISION_SCALE)
+        self.vision_img_org = Landscape(
+            self.rrmap_vision_img, 
+            self.weight_list, self.node_list, 
+            self.cfg.BASE_MARGIN, self.cfg.LADDER_MARGIN, 1).create_1x1_landscape_vision_img_wide4(
+                self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
+                CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
+        self.vision = self.vision_img_org.copy()
+        self.next_vision_cropped_resized = None
         if self.debug:
             print('[MapImageCreator] init completed')
 
-    def update(self):
+    def update_pose(self):
         # angle
         y_length = self.head_position[1, 0] - self.tail_position[1, 0]
         x_length = self.head_position[0, 0] - self.tail_position[0, 0]
@@ -217,32 +367,42 @@ class MapImageCreator:
         pos_x = self.head_position[0, 0]
         pos_y = self.head_position[1, 0]
         angle = 90 - angle
-        print('[MapImageCreator] update pos_x=%f, pos_y=%f, angle=%f' % (pos_x, pos_y, angle))
-        '''
+        if self.debug:
+            print('[MapImageCreator] update pos_x=%f, pos_y=%f, angle=%f' % (pos_x, pos_y, angle))
+        return pos_x, pos_y, angle
+
+    def update(self):
+        pos_x, pos_y, angle = self.update_pose()
+        
         if pos_x != np.nan and pos_y != np.nan and angle != np.nan:
             # 切り出していないフルサイズのビジョン画面にエージェントを描画する
-            next_vision = vision.copy()
-            for b in mobile.loader:
+            next_vision = self.vision.copy()
+            for b in self.mobile.loader:
                 b.position[0, 0], b.position[1, 0] = pos_x, pos_y
                 b.angle = angle
                 b.draw(vision=next_vision)
 
             # エージェントを描画したフルサイズのビジョン画面をそのときのエージェント位置に合わせて切り出し、入力画像サイズに成形する
             # これがローダーカメラ入力の画像
-            next_vision_cropped_resized = get_torch_view(next_vision, 60, mobile.loader[2].position[0, 0],
-                                                         mobile.loader[2].position[1, 0], mobile.loader[2].angle,
-                                                         vision_scale, 160, 120, vision_margin_x, vision_margin_y)
+            self.next_vision_cropped_resized = self.get_torch_view(next_vision, 60, 
+                self.mobile.loader[2].position[0, 0],
+                self.mobile.loader[2].position[1, 0],
+                self.mobile.loader[2].angle,
+                self.cfg.VISION_SCALE, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Y,
+                self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y)
 
             # テスト表示画面用に変換する
-            next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
+            #self.next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
 
             # テスト表示キャンバスに張替
-            w.delete("vision1")
-            w.create_image(vision_margin_x, vision_margin_y, image=next_vision_img, anchor=NW, tag="vision1")
+            #w.delete("vision1")
+            #w.create_image(self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y, 
+            #    image=next_vision_img, anchor=NW, tag="vision1")
             #master.update()
         else:
-            print('!!!!! position or angle is nan !!!!!')
-        '''
+            if self.debug:
+                print('[MapImageCreator] position or angle is nan!')
+        
 
     def update_head_position(self):
         self.head_distances = self.head_hedge.distances()
@@ -279,7 +439,9 @@ class MapImageCreator:
                 str(self.tail_address),
                 str(self.tail_position[0]), str(self.tail_position[1]), str(self.tail_position[2])))
         self.update()
-        return dk.utils.img_to_arr(self.image)
+        if self.next_vision_cropped_resized is None:
+            return np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
+        return dk.utils.img_to_arr(self.next_vision_cropped_resized)
     
     def shutdown(self):
         """
@@ -300,7 +462,7 @@ class MapImageCreator:
         # for i in (1,len(beacon_address)):
         # distances[2*i] = distances[2*i]/8  # in studs
         shortest_distance = math.inf
-        for i in range(1, len(self.cfg.beacon_address) + 1):
+        for i in range(1, len(self.beacon_address) + 1):
             if distances[2 * i] < shortest_distance:
                 shortest_distance = distances[2 * i]
                 excluded_address = distances[2 * i - 1]
@@ -311,17 +473,17 @@ class MapImageCreator:
         tri_distances = []
         tri_beacon_address = []
         tri_beacon_position = []
-        for j in range(len(self.cfg.beacon_address)):
-            for i in range(1, len(self.cfg.beacon_address) + 1):
+        for j in range(len(self.beacon_address)):
+            for i in range(1, len(self.beacon_address) + 1):
                 if distances[2 * i - 1] != excluded_address:
-                    if distances[2 * i - 1] == int(self.cfg.beacon_address[j]):
+                    if distances[2 * i - 1] == int(self.beacon_address[j]):
                         # print("beacon_address[{:d}] = {:s}".format(j, beacon_address[j]))
                         tri_distances.append(distances[2 * i - 1])
                         # tri_beacon_address.append(distances[2*i - 1])
                         tri_distances.append(distances[2 * i] * 1000 / 8)
-                        tri_beacon_address.append(self.cfg.beacon_address[j])
+                        tri_beacon_address.append(self.beacon_address[j])
                         # print(beacon_position[j])
-                        tri_beacon_position.append([self.cfg.beacon_position[j, 0], self.cfg.beacon_position[j, 1], self.cfg.beacon_position[j, 2]])
+                        tri_beacon_position.append([self.beacon_position[j, 0], self.beacon_position[j, 1], self.beacon_position[j, 2]])
 
         if self.debug:
             print("Multilateration: B{:d}:{:.3f}, B{:d}:{:.3f}, B{:d}:{:.3f}".format(tri_distances[0], tri_distances[1],
@@ -434,6 +596,34 @@ class MapImageCreator:
         #    updated_point_list.append(garden_point[i,0])
         return distances[0], updated_garden_point
 
+    def get_torch_view(self, overall_view, torch_radius, pos_x, pos_y, rotate_angle, v_scale, view_width, view_height, offset_x, offset_y):
+        # mobileの位置を中心として、半径rのアルファチャンネルを作る
+        im_a = Image.new("L", overall_view.size, 0)
+        draw = ImageDraw.Draw(im_a)
+        pos = [
+                (pos_x + offset_x) * v_scale - torch_radius, (pos_y + offset_y) * v_scale - torch_radius, 
+                (pos_x + offset_x) * v_scale + torch_radius, (pos_y + offset_y) * v_scale + torch_radius
+            ]
+        # print(pos)
+        draw.ellipse(pos, fill=255)
+        im_rgba = overall_view.copy()
+        im_rgba.putalpha(im_a)
+        im_rgba_crop = im_rgba.crop(pos)  # R120
+        #　mobileのangleで回転
+        rotate_angle = (360 - rotate_angle) % 360 - 180
+        img = im_rgba_crop.rotate(rotate_angle)
+
+        # 入力画像サイズ(160, 120)のバックグラウンドに張り付ける
+        torch_view = Image.new("RGB", (view_width, view_height), 0)
+        torch_view.paste(img, 
+            (
+                int((view_width - torch_radius * 2) / 2), 
+                int((view_height - torch_radius * 2) / 2)
+            )
+        )
+
+        return torch_view
+
 if __name__ == '__main__':
     V = dk.vehicle.Vehicle()
 
@@ -443,6 +633,6 @@ if __name__ == '__main__':
         def run(self, image_array):
             print('image_array = {}'.format(str(image_array)))
 
-    #V.add(PrintImage(), inputs=['cam/image_array'])
+    V.add(PrintImage(), inputs=['cam/image_array'])
 
     V.start(rate_hz=20, max_loop_count=10000)
