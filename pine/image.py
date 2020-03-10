@@ -452,6 +452,11 @@ class MapImageCreator:
         if self.next_vision_cropped_resized is None:
             print('[MapImageCreator] self.next_vision_cropped_resized is none')
             return np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
+        image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
+        print('[MapImageCreator] run()')
+        print(image_array)
+        print(type(image_array))
+        print(image_array.shape)
         return dk.utils.img_to_arr(self.next_vision_cropped_resized)
     
     def shutdown(self):
