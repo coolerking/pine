@@ -291,14 +291,7 @@ class MapImageCreator:
         # スレッド処理でインスタンス変数 image にPIL Imageを書き込む
         self.cfg = DefaultConfig(cfg=cfg, debug=debug)
         self.debug = debug
-        self.head_hedge = MarvelmindHedge(
-            tty=self.cfg.HEAD_HEDGE_TTY,
-            recieveUltrasoundRawDataCallback=self.update_head_position)
-        self.head_hedge.start()
-        self.tail_hedge = MarvelmindHedge(
-            tty=self.cfg.TAIL_HEDGE_TTY,
-            recieveUltrasoundRawDataCallback=self.update_tail_position)
-        self.tail_hedge.start()
+
         self.image = np.zeros((120, 160,3))
         self.garden_axis = [0, 0, -1*41]
         self.head_address = None
@@ -307,18 +300,6 @@ class MapImageCreator:
         self.tail_position = np.zeros((3, 1))
         self.head_distances = None
         self.tail_distances = None
-        while(self.head_distances is None or self.tail_distances is None):
-            if self.debug:
-                print('[MapImageCreator] no distances yet, wait {} sec.'.format(str(self.cfg.WAIT_INTERVAL)))
-            sleep(self.cfg.WAIT_INTERVAL)
-        if self.cfg.HEAD_HEDGE_ID == self.head_address and self.cfg.TAIL_HEDGE_ID == self.tail_address:
-            if self.debug:
-                print('[MapImageCreator] hedge ids configuration match')
-        else:
-            if self.debug:
-                print('[MapImageCreator] head conf id:{} actual:{}'.format(str(self.cfg.HEAD_HEDGE_ID), str(self.head_address)))
-                print('[MapImageCreator] tail conf id:{} actual:{}'.format(str(self.cfg.TAIL_HEDGE_ID), str(self.tail_address)))
-            raise ValueError('hedge ids configuration unmatch')
 
         self.course_node_numbers, self.course_node_numbers_nodes = CourseUtils.get_course_node_data(
             course_type=self.cfg.COURSE_TYPE)
@@ -351,6 +332,26 @@ class MapImageCreator:
                 CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
         self.vision = self.vision_img_org.copy()
         self.next_vision_cropped_resized = None
+        self.head_hedge = MarvelmindHedge(
+            tty=self.cfg.HEAD_HEDGE_TTY,
+            recieveUltrasoundRawDataCallback=self.update_head_position)
+        self.head_hedge.start()
+        self.tail_hedge = MarvelmindHedge(
+            tty=self.cfg.TAIL_HEDGE_TTY,
+            recieveUltrasoundRawDataCallback=self.update_tail_position)
+        self.tail_hedge.start()
+        while(self.head_distances is None or self.tail_distances is None):
+            if self.debug:
+                print('[MapImageCreator] no distances yet, wait {} sec.'.format(str(self.cfg.WAIT_INTERVAL)))
+            sleep(self.cfg.WAIT_INTERVAL)
+        if self.cfg.HEAD_HEDGE_ID == self.head_address and self.cfg.TAIL_HEDGE_ID == self.tail_address:
+            if self.debug:
+                print('[MapImageCreator] hedge ids configuration match')
+        else:
+            if self.debug:
+                print('[MapImageCreator] head conf id:{} actual:{}'.format(str(self.cfg.HEAD_HEDGE_ID), str(self.head_address)))
+                print('[MapImageCreator] tail conf id:{} actual:{}'.format(str(self.cfg.TAIL_HEDGE_ID), str(self.tail_address)))
+            raise ValueError('hedge ids configuration unmatch')
         if self.debug:
             print('[MapImageCreator] init completed')
 
