@@ -10,7 +10,7 @@ def test_pine():
     V.add(MapImageCreator(cfg), outputs=['cam/image_array'])
 
     th = TubHandler(path=cfg.DATA_PATH)
-    tub = th.new_tub_writer(inputs=['cam/image_array'], types=ty['image_array']pes, user_meta={})
+    tub = th.new_tub_writer(inputs=['cam/image_array'], types=['image_array'], user_meta={})
     V.add(tub, inputs=['cam/image_array'], outputs=["tub/num_records"])
 
     try:
