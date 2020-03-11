@@ -389,8 +389,8 @@ class MapImageCreator:
                 b.position[0, 0], b.position[1, 0] = pos_x, pos_y
                 b.angle = angle
                 b.draw(vision=next_vision)
-            print('next vision array')
-            print(dk.utils.img_to_arr(next_vision))
+            #print('next vision array')
+            #print(dk.utils.img_to_arr(next_vision))
             # エージェントを描画したフルサイズのビジョン画面をそのときのエージェント位置に合わせて切り出し、入力画像サイズに成形する
             # これがローダーカメラ入力の画像
             self.next_vision_cropped_resized = self.get_torch_view(next_vision, 60, 
@@ -404,16 +404,16 @@ class MapImageCreator:
                 print(self.next_vision_cropped_resized)
                 print(type(self.next_vision_cropped_resized))
             self.next_vision_cropped_resized.save('next_vision.jpg', quality=95)
-            print('next_vision_cropped_resized')
-            print(type(self.next_vision_cropped_resized))
+            #print('next_vision_cropped_resized')
+            #print(self.next_vision_cropped_resized)
             #print(np.array(self.next_vision_cropped_resized)==dk.utils.img_to_arr(self.next_vision_cropped_resized))
 
-            self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
+            self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized.convert('RGB'))
             #if self.debug:
-            print('[MapImageCreator] image_array')
-            print(self.image_array.shape)
-            print(self.image_array.dtype)
-            print(dk.utils.arr_to_img(self.image_array)==self.next_vision_cropped_resized)
+            #print('[MapImageCreator] image_array')
+            #print(self.image_array.shape)
+            #print(self.image_array.dtype)
+            #print(dk.utils.arr_to_img(self.image_array)==self.next_vision_cropped_resized)
             #print(self.image_array == np.zeros(self.image_array.shape))
             #print(type(self.image_array))
             # テスト表示画面用に変換する
