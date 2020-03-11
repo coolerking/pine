@@ -225,3 +225,21 @@
 # PID_THROTTLE = 0.2                  # constant throttle value during path following
 # SAVE_PATH_BTN = "cross"             # joystick button to save path
 # RESET_ORIGIN_BTN = "triangle"       # joystick button to press to move car back to origin
+
+###
+# pine
+###
+HEAD_HEDGE_ID = 6
+HEAD_HEDGE_TTY = '/dev/ttyACM0'
+TAIL_HEDGE_ID = 5
+TAIL_HEDGE_TTY = '/dev/ttyACM1'
+NUM_OF_GRID_X = 152
+NUM_OF_GRID_Y = 120
+GRID_SIZE = 1
+WAIT_INTERVAL = 0.1
+WEIGHT_LIST_PATH = 'conf/pine/1b1w.txt'
+NODE_LIST_PATH = 'conf/pine/1b1n.txt'
+RESISTANCE_LIST_PATH = 'conf/pine/RRMap2.txt'
+BEACON_LIST_PATH = 'conf/pine/1b1b.txt'
+VISION_BACKGROUND_PATH = 'vision_map.jpg'
+COURSE_TYPE = 'INNER_CLOCKWISE'
