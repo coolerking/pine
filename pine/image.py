@@ -410,9 +410,9 @@ class MapImageCreator:
 
             self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized.convert('RGB'))
             #if self.debug:
-            #print('[MapImageCreator] image_array')
-            #print(self.image_array.shape)
-            #print(self.image_array.dtype)
+            print('[MapImageCreator] image_array')
+            print(self.image_array.shape)
+            print(self.image_array.dtype)
             #print(dk.utils.arr_to_img(self.image_array)==self.next_vision_cropped_resized)
             #print(self.image_array == np.zeros(self.image_array.shape))
             #print(type(self.image_array))
