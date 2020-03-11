@@ -403,6 +403,7 @@ class MapImageCreator:
                 print('[MapImageCreator] next_vision_cropped_resized updated')
                 print(self.next_vision_cropped_resized)
                 print(type(self.next_vision_cropped_resized))
+            self.next_vision_cropped_resized.save('next_vision.jpg', quality=95)
             self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
             #if self.debug:
             print('[MapImageCreator] image_array')
