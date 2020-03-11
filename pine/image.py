@@ -406,12 +406,14 @@ class MapImageCreator:
             self.next_vision_cropped_resized.save('next_vision.jpg', quality=95)
             print('next_vision_cropped_resized')
             print(type(self.next_vision_cropped_resized))
-            print(np.asarray(self.next_vision_cropped_resized))
+            print(np.asarray(self.next_vision_cropped_resized)==dk.utils.img_to_arr(self.next_vision_cropped_resized))
+
             self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized)
             #if self.debug:
-            print('[MapImageCreator] image_array')
-            print(self.image_array)
-            print(type(self.image_array))
+            #print('[MapImageCreator] image_array')
+            print(self.image_array.shape)
+            print(self.image_array == np.zeros(self.image_array.shape))
+            #print(type(self.image_array))
             # テスト表示画面用に変換する
             #self.next_vision_img = ImageTk.PhotoImage(next_vision_cropped_resized)
 
