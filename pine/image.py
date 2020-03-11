@@ -326,11 +326,11 @@ class MapImageCreator:
             self.cfg.BASE_MARGIN, self.cfg.LADDER_MARGIN, 1).create_1x1_landscape_vision_img_wide4(
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
                 CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
-        print('vision org array')
-        print(dk.utils.img_to_arr(self.vision_img_org))
+        #print('vision org array')
+        #print(dk.utils.img_to_arr(self.vision_img_org))
         self.vision = self.vision_img_org.copy()
-        print('vision array')
-        print(dk.utils.img_to_arr(self.vision))
+        #print('vision array')
+        #print(dk.utils.img_to_arr(self.vision))
         self.next_vision_cropped_resized = None
         self.image_array = np.zeros((self.cfg.VISION_SIZE_Y, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Z))
         self.head_hedge = MarvelmindHedge(
@@ -381,7 +381,7 @@ class MapImageCreator:
 
     def update(self):
         pos_x, pos_y, angle = self.update_pose()
-        print('[MapImageCreator] update_pose() pos_x=%f, pos_y=%f, angle=%f' % (pos_x, pos_y, angle))
+        print('%f,%f,%f' % (pos_x, pos_y, angle))
         if pos_x != np.nan and pos_y != np.nan and angle != np.nan:
             # 切り出していないフルサイズのビジョン画面にエージェントを描画する
             next_vision = self.vision.copy()
@@ -406,17 +406,17 @@ class MapImageCreator:
             #f = ByteIO()
             #self.next_vision_cropped_resized.save(f, format='jpeg')
             #bin_next_vision = f.getValue()
-            self.next_vision_cropped_resized = dk.utils.binary_to_img(dk.utils.img_to_binary(self.next_vision_cropped_resized))
-            self.next_vision_cropped_resized.save('next_vision.jpg', quality=100)
-            print('next_vision_cropped_resized')
-            print(self.next_vision_cropped_resized)
+            #self.next_vision_cropped_resized = dk.utils.binary_to_img(dk.utils.img_to_binary(self.next_vision_cropped_resized))
+            #self.next_vision_cropped_resized.save('next_vision.jpg', quality=100)
+            #print('next_vision_cropped_resized')
+            #print(self.next_vision_cropped_resized)
             #print(np.array(self.next_vision_cropped_resized)==dk.utils.img_to_arr(self.next_vision_cropped_resized))
 
-            self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized.convert('RGB'))
+            self.image_array = dk.utils.img_to_arr(self.next_vision_cropped_resized) #.convert('RGB'))
             #if self.debug:
-            print('[MapImageCreator] image_array')
-            print(self.image_array.shape)
-            print(self.image_array.dtype)
+            #print('[MapImageCreator] image_array')
+            #print(self.image_array.shape)
+            #print(self.image_array.dtype)
             #print(dk.utils.arr_to_img(self.image_array)==self.next_vision_cropped_resized)
             #print(self.image_array == np.zeros(self.image_array.shape))
             #print(type(self.image_array))
