@@ -80,7 +80,7 @@ class DefaultConfig:
         # CourseUtilsクラスのget_course_node_data()の引数course_type値
         self.COURSE_TYPE = 'INNER_CLOCKWISE' if cfg is None else str(cfg.COURSE_TYPE)
 
-    def _set_def(cfg, attr, def_value):
+    def _set_def(self, cfg, attr, def_value):
         if cfg is None or attr is None:
             return False
         return getattr(cfg, attr) if hasattr(cfg, attr) else def_value
