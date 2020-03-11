@@ -36,18 +36,18 @@ class DefaultConfig:
         self.HEAD_HEDGE_TTY = str(self.set_def(cfg, 'HEAD_HEDGE_TTY', '/dev/ttyACM0'))
 
         # 後方モバイルビーコン
-        self.TAIL_HEDGE_ID = 5 if cfg is None else int(cfg.TAIL_HEDGE_ID)
-        self.TAIL_HEDGE_TTY = '/dev/ttyACM1' if cfg is None else str(cfg.TAIL_HEDGE_TTY)
+        self.TAIL_HEDGE_ID = int(self.set_def(cfg, 'TAIL_HEDGE_ID', 5))
+        self.TAIL_HEDGE_TTY = str(self.set_def(cfg, 'TAIL_HEDGE_TTY', '/dev/ttyACM1'))
 
         # 箱庭倉庫俯瞰図サイズ
-        self.NUM_OF_GRID_X = 152 if cfg is None else int(cfg.NUM_OF_GRID_X)
-        self.NUM_OF_GRID_Y = 120 if cfg is None else int(cfg.NUM_OF_GRID_Y)
+        self.NUM_OF_GRID_X = int(self.set_def(cfg, 'NUM_OF_GRID_X', 152))
+        self.NUM_OF_GRID_Y = int(self.set_def(cfg, 'NUM_OF_GRID_Y', 120))
 
         # AIへの入力データサイズ
-        self.VISION_SIZE_X = 160 if cfg is None else int(cfg.IMAGE_W)
-        self.VISION_SIZE_Y = 120 if cfg is None else int(cfg.IMAGE_H)
-        self.VISION_SIZE_Z = 3 if cfg is None else int(cfg.IMAGE_DEPTH)
-        self.GRID_SIZE = 1 if cfg is None else int(cfg.GRID_SIZE)
+        self.VISION_SIZE_X = int(self.set_def(cfg, 'IMAGE_W', 160))
+        self.VISION_SIZE_Y = int(self.set_def(cfg, 'IMAGE_H', 120))
+        self.VISION_SIZE_Z = int(self.set_def(cfg, 'IMAGE_DEPTH', 3))
+        self.GRID_SIZE = int(self.set_def(cfg, 'GRID_SIZE', 1))
 
         # フルサイズのビジョンイメージ
         self.BASE_MARGIN = 4  # 基礎エリアのオフセット
@@ -60,30 +60,34 @@ class DefaultConfig:
 
 
 
-        self.WAIT_INTERVAL = 0.1 if cfg is None else float(cfg.WAIT_INTERVAL)
+        self.WAIT_INTERVAL = float(self.set_def(cfg, 'WAIT_INTERVAL', 0.1))
 
         # 連結されたノード間の重み付け。移動コストによるコース選択判定に利用
-        self.WEIGHT_LIST_PATH = '1b1w.txt' if cfg is None else str(cfg.WEIGHT_LIST_PATH)
+        self.WEIGHT_LIST_PATH =  str(self.set_def(cfg, 'WEIGHT_LIST_PATH', '1b1w.txt'))
 
         # 各ノードの座標データ
-        self.NODE_LIST_PATH = '1b1n.txt' if cfg is None else str(cfg.NODE_LIST_PATH)
+        self.NODE_LIST_PATH = str(self.set_def(cfg, 'NODE_LIST_PATH', '1b1n.txt'))
 
         # landscape（152×120画像）の各画素ごとの走行抵抗値（転がり摩擦係数）
-        self.RESISTANCE_LIST_PATH = 'RRMap2.txt' if cfg is None else str(cfg.RESISTANCE_LIST_PATH)
+        self.RESISTANCE_LIST_PATH =  str(self.set_def(cfg, 'RESISTANCE_LIST_PATH', 'RRMap2.txt'))
 
         # Stationary beacon 4基の箱庭座標系における設置位置 (in studs)
-        self.BEACON_LIST_PATH = '1b1b.txt' if cfg is None else str(cfg.BEACON_LIST_PATH)
+        self.BEACON_LIST_PATH =  str(self.set_def(cfg, 'BEACON_LIST_PATH', '1b1b.txt'))
 
         # vision用の走行抵抗マップ（バックグラウンド）出力パス
-        self.VISION_BACKGROUND_PATH = 'vision_map.jpg' if cfg is None else str(cfg.VISION_BACKGROUND_PATH)
+        self.VISION_BACKGROUND_PATH =  str(self.set_def(cfg, 'VISION_BACKGROUND_PATH', 'vision_map.jpg'))
 
         # CourseUtilsクラスのget_course_node_data()の引数course_type値
-        self.COURSE_TYPE = 'INNER_CLOCKWISE' if cfg is None else str(cfg.COURSE_TYPE)
+        self.COURSE_TYPE =  str(self.set_def(cfg, 'COURSE_TYPE', 'INNER_CLOCKWISE'))
 
-    def set_def(self, cfg, attr, def_value):
+        if self.debug:
+            print('[DefaultConfig] attr list: {}'.format(dir(self)))
+
+    def set_def(self, cfg, attr, def_value=None):
         if cfg is None or attr is None:
-            return False
-        return getattr(cfg, attr) if hasattr(cfg, attr) else def_value
+            return def_value
+        else:
+            return getattr(cfg, attr) if hasattr(cfg, attr) else def_value
 
 class CourseUtils:
     """
