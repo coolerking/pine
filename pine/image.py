@@ -10,9 +10,9 @@ import math
 from time import sleep
 from tkinter import NW
 from PIL import Image, ImageDraw, ImageTk
-from marvelmind import MarvelmindHedge
+from .marvelmind import MarvelmindHedge
 
-from SpoolMobile import SpoolMobile, Landscape, ResistanceMap
+from .SpoolMobile import SpoolMobile, Landscape, ResistanceMap
 
 class DefaultConfig:
     """
