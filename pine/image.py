@@ -32,8 +32,8 @@ class DefaultConfig:
         self.debug = debug
         
         # 前方モバイルビーコン
-        self.HEAD_HEDGE_ID = int(self._set_def(cfg, 'HEAD_HEDGE_ID', 6))
-        self.HEAD_HEDGE_TTY = str(self._(cfg, 'HEAD_HEDGE_TTY', '/dev/ttyACM0'))
+        self.HEAD_HEDGE_ID = int(self.set_def(cfg, 'HEAD_HEDGE_ID', 6))
+        self.HEAD_HEDGE_TTY = str(self.set_def(cfg, 'HEAD_HEDGE_TTY', '/dev/ttyACM0'))
 
         # 後方モバイルビーコン
         self.TAIL_HEDGE_ID = 5 if cfg is None else int(cfg.TAIL_HEDGE_ID)
@@ -80,7 +80,7 @@ class DefaultConfig:
         # CourseUtilsクラスのget_course_node_data()の引数course_type値
         self.COURSE_TYPE = 'INNER_CLOCKWISE' if cfg is None else str(cfg.COURSE_TYPE)
 
-    def _set_def(self, cfg, attr, def_value):
+    def set_def(self, cfg, attr, def_value):
         if cfg is None or attr is None:
             return False
         return getattr(cfg, attr) if hasattr(cfg, attr) else def_value
