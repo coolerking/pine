@@ -1,28 +1,18 @@
 # -*- coding: utf-8 -*-
-
-
+"""
+疎通テスト用モジュール。
+"""
 import donkeycar as dk
+from time import sleep
 
-'''
-def test_pine():
-    from pine.image import MapImageCreator
-    cfg = dk.load_config()
-    V = dk.vehicle.Vehicle()
+class PrintPose:
+    def __init__(self):
+        print('pos_x, pos_y, angle')
 
-    V.add(MapImageCreator(cfg), outputs=['cam/image_array'])
+    def run(self, pos_x, pos_y, angle):
+        print('{}, {}, {}'.format(str(pos_x), str(pos_y), str(angle)))
 
-    th = TubHandler(path=cfg.DATA_PATH)
-    tub = th.new_tub_writer(inputs=['cam/image_array'], types=['image_array'], user_meta={})
-    V.add(tub, inputs=['cam/image_array'], outputs=["tub/num_records"])
-
-    try:
-        V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
-    except KeyboardInterrupt:
-        print('stopped')
-    else:
-        raise
-'''
-def test_pine():
+def test_pine_double_hedges():
     cfg = dk.load_config()
     V = dk.vehicle.Vehicle()
     
@@ -41,10 +31,42 @@ def test_pine():
         inputs=['cam/image_array', 'pose/x', 'pose/y', 'pose/angle'], 
         outputs=["tub/num_records"])
 
+    V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
+
     try:
-        V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
+        V.start(rate_hz=20, max_loop_count=720)
+    except KeyboardInterrupt:
+        print('stopped')
+
+def test_pine_realsense2():
+    cfg = dk.load_config()
+    V = dk.vehicle.Vehicle()
+    
+    from pine.realsense2 import PoseReader
+    V.add(PoseReader(cfg), outputs=['pose/x', 'pose/y', 'pose/angle'])
+
+    from pine.map import ImageCreator
+    V.add(ImageCreator(cfg), inputs=['pose/x', 'pose/y', 'pose/angle'], outputs=['cam/image_array'])
+
+    from donkeycar.parts.datastore import TubHandler
+    th = TubHandler(path=cfg.DATA_PATH)
+    tub = th.new_tub_writer(
+        inputs=['cam/image_array', 'pose/x', 'pose/y', 'pose/angle'],
+        types=['image_array', 'float', 'float', 'float'], user_meta={})
+    V.add(tub,
+        inputs=['cam/image_array', 'pose/x', 'pose/y', 'pose/angle'], 
+        outputs=["tub/num_records"])
+
+    V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
+
+    try:
+        V.start(rate_hz=20, max_loop_count=720)
     except KeyboardInterrupt:
         print('stopped')
 
 if __name__ == '__main__':
-    test_pine()
+    print('[start] double hedges')
+    test_pine_double_hedges()
+    sleep(5.0)
+    print('[start] realsense2')
+    test_pine_realsense2()

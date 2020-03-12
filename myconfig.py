@@ -231,13 +231,25 @@
 # pine
 ###
 #
+# target pose sensor
+#
+#POSE_DEVICE_TYPE = 'double_hedges' # use marvelmind beacons
+POSE_DEVICE_TYPE = 'realsense2' # use realsense T265
+WAIT_INTERVAL = 0.1
+#
 # double_hedges PoseReader
 #
 HEAD_HEDGE_ID = 6
 HEAD_HEDGE_TTY = '/dev/ttyACM0'
 TAIL_HEDGE_ID = 5
 TAIL_HEDGE_TTY = '/dev/ttyACM1'
-WAIT_INTERVAL = 0.1
+#
+# realsense PoseReader
+#
+START_X_CM = 16.0
+START_Y_CM = 16.0
+START_Z_CM = 0.0
+START_ANGLE_DEGREES = -90.0
 #
 # MapImageCreator
 #

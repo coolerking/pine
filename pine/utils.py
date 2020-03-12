@@ -192,3 +192,23 @@ def course_line(node_numbers, node_list):
     for i in range(len(node_numbers)):
         coordinates.append(node_list[node_numbers[i] - 1] + mysterious_offset)
     return np.array(coordinates)
+
+def convert_studs(value, unit='m'):
+    """
+    座標系単位をstuds(レゴのポッチ)に変換する。
+    引数：
+        value               変換対象値(float)
+        unit                単位('mm'/'cm'/'m'のいずれか)
+    戻り値：
+        studs単位の値
+    例外：
+        NotImplementedError サポート外の単位を指定した場合
+    """
+    if unit == 'cm':
+        return float(float(value)*10.0/8.0)
+    elif unit == 'm':
+        return float(float(value)*10.0*100.0/8.0)
+    elif unit == 'mm':
+        return float(float(value)/8.0)
+    else:
+        NotImplementedError('not supported unit={}'.format(str(unit)))
