@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # """ 
 # My CAR CONFIG 
 
@@ -229,14 +230,27 @@
 ###
 # pine
 ###
+#
+# double_hedges PoseReader
+#
 HEAD_HEDGE_ID = 6
 HEAD_HEDGE_TTY = '/dev/ttyACM0'
 TAIL_HEDGE_ID = 5
 TAIL_HEDGE_TTY = '/dev/ttyACM1'
+WAIT_INTERVAL = 0.1
+#
+# MapImageCreator
+#
 NUM_OF_GRID_X = 152
 NUM_OF_GRID_Y = 120
 GRID_SIZE = 1
-WAIT_INTERVAL = 0.1
+BASE_MARGIN = 4  # 基礎エリアのオフセット
+LADDER_MARGIN = 8  # ラダーエリアのオフセット
+VISION_SCALE = 4  # 入力画面として作成する画像の拡大率（整数倍）。1倍で152×120。
+# テスト表示用のキャンバスの余白
+VISION_MARGIN_X = 10
+VISION_MARGIN_Y = 10
+# コース情報
 WEIGHT_LIST_PATH = 'conf/pine/1b1w.txt'
 NODE_LIST_PATH = 'conf/pine/1b1n.txt'
 RESISTANCE_LIST_PATH = 'conf/pine/RRMap2.txt'

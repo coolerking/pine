@@ -10,9 +10,19 @@ import math
 from time import sleep
 from tkinter import NW
 from PIL import Image, ImageDraw, ImageTk
-from .marvelmind import MarvelmindHedge
-
-from .SpoolMobile import SpoolMobile, Landscape, ResistanceMap
+try:
+    from .marvelmind import MarvelmindHedge
+except:
+    raise
+try:
+    from .SpoolMobile import SpoolMobile, Landscape, ResistanceMap
+except:
+    raise
+try:
+    from .utils import get_color_dict, get_course_node_data, init_beacon_data, \
+        init_node_data, init_resistance_data, init_weight_data, init_garden_axis, course_line
+except:
+    raise
 
 class DefaultConfig:
     """
@@ -89,197 +99,6 @@ class DefaultConfig:
         else:
             return getattr(cfg, attr) if hasattr(cfg, attr) else def_value
 
-class CourseUtils:
-    """
-    倉庫内コースに関する情報を提供するユーティリティクラス。
-    すべて静的メソッドで提供。
-    """
-
-    @staticmethod
-    def get_color_dict():
-        """
-        vision用の走行抵抗マップの色指定（辞書型）を取得する。
-        引数：
-            なし
-        戻り値：
-            vision用の走行抵抗マップの色指定（辞書型）
-        """
-        # 緑無地
-        return {0.001: '#00984C', 0.3: '#00984C', 0.002: '#00984C'}
-
-    @staticmethod
-    def get_course_node_data(course_type):
-        """
-        config.py/myconfig.py オブジェクトに定義されたCOURSE_TYPEに従って
-        コースデータを作成する。
-        引数：
-            course_type     COURSE_TYPE値（コースタイプ）
-        戻り値：
-            course_node_numbers         周回路に含まれるコーナーノードリスト
-            course_node_numbers_nodes   course_node_numbersに加えてコーナーノード間のすべてのノードを含むリスト
-        """
-        # 以下、AI_Pilotテスト用の周回コースのノードリスト ------------------------------------
-        # course_node_numbersは、周回路に含まれるコーナーノード　⇒　主にシミュレータのAuto_Pilot用
-        # course_node_numbers_nodesは、course_node_numbersに加えてコーナーノード間のすべてのノードを含む　⇒　主にローダーへの走路指示用
-        if course_type is None or course_type == 'INNER_CLOCKWISE':
-            # 内周/時計回り
-            course_node_numbers = [25, 37, 33, 29, 25, 37]  # inner clockwise
-            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 37]  # inner with existing nodes
-        elif course_type == 'INNER_COUNTER_CLOCKWISE':
-            # 内周/反時計回り
-            course_node_numbers = [25, 29, 33, 37, 25, 29]  # inner counter-clockwise
-            course_node_numbers_nodes = [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 25, 26]  # inner with existing nodes
-        elif course_type == 'U_TURN':
-            # Ｕターン
-            course_node_numbers = [25, 37, 33, 12, 7, 2, 25, 37]  # inner clockwise
-            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 25, 40]  # inner with existing nodes
-        elif course_type == 'I_TURN':
-            # Iターン 超信地旋回が必要
-            course_node_numbers = [25, 37, 33, 37, 25, 37]  # inner clockwise
-            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 34, 35, 36, 37, 38, 39, 40, 25, 40]
-        elif course_type == 'CONVEX_CLOCKWISE':
-            # 凸：時計回り
-            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 29, 25, 37]
-            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 40]
-        elif course_type == 'BIG_CONVEX_CLOCKWISE':
-            # big凸：時計回り
-            course_node_numbers = [1, 4, 39, 37, 33, 31, 16, 19, 1, 4]
-            course_node_numbers_nodes = [1, 2, 3, 4, 39, 38, 37, 36, 35, 34, 33, 32, 31, 16, 17, 18, 19, 20, 21, 22, 23, 24, 1, 2]
-        elif course_type == 'CONVEX_INNER_CLOCKWISE':
-            # 内周＋車線変更　（凸x2：時計回り）
-            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 32, 15, 17, 30, 29, 25, 37]
-            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 15, 16, 17, 30, 29, 28, 27, 26, 25, 40]
-        elif course_type == 'CONVEX_INNER_CLOCKWISE2':
-            # 内周＋車線変更
-            course_node_numbers = [25, 37, 35, 10, 13, 19, 22, 27, 25, 37]
-            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 35, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 26, 25, 40]
-        elif course_type == 'CONVEX':
-            # 内外周＋車線変更
-            course_node_numbers = [1, 4, 39, 37, 35, 10, 13, 16, 31, 29, 27, 22, 1, 4]
-            course_node_numbers_nodes = [1, 2, 3, 4, 39, 38, 37, 36, 35, 10, 11, 12, 13, 14, 15, 16, 31, 30, 29, 28, 27, 22, 23, 24, 1, 2]
-        elif course_type == 'CONVEX_OUTER_CLOCKWISE':
-            course_node_numbers = [1, 7, 13, 19, 1, 7] # outer clockwise
-            course_node_numbers_nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 1, 2]
-        elif course_type == 'INNER_CLOCKWISE_LEFT_LONG':
-            course_node_numbers = [25, 37, 14, 18, 25, 37]  # inner 右に横長 clockwise
-            course_node_numbers_nodes = [25, 40, 39, 38, 37, 36, 35, 34, 33, 14, 15, 16, 17, 18, 29, 28, 27, 26, 25, 40]
-        elif course_type == 'CLOCKWISE':
-            course_node_numbers = [24, 37, 14, 19, 24, 37]  # inner & outer clockwise
-            course_node_numbers_nodes = [24, 25, 40, 39, 38, 37, 36, 35, 34, 33, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-        elif course_type == 'CLOCKWISE_HEIGHT':
-            # self.course_node_numbers_01 = [25, 37, 36, 9, 11, 34, 33, 29, 25, 37]
-            course_node_numbers = [25, 37, 36, 9, 11, 34, 33, 29, 28, 21, 23, 26, 25, 37] # tate clockwise
-            course_node_numbers_nodes = [25,  40, 39, 38, 37, 36, 9, 10, 11, 34, 33, 32, 31, 30, 29, 28, 21, 22, 23, 26, 25, 40] # tate with nodes
-        elif course_type == 'CLOCKWISE_WIDTH':
-            course_node_numbers = [25, 40, 3, 5, 36, 37, 38, 32, 15, 17, 30, 29, 25, 40] # yoko clockwise
-            course_node_numbers_nodes = [25, 40, 3, 4, 5, 38, 37, 36, 35, 34, 33, 32, 15, 16, 17, 30, 29, 28, 27, 26, 25, 40]
-            # self.course_node_numbers = [25, 40, 3, 4, 39, 37, 35, 10, 11, 34, 33, 32, 15, 17, 30, 29, 28, 21, 23, 26, 25, 40]
-        else:
-            raise ValueError('[CourseUtils] course_type={} not supported'.format(str(course_type)))
-        return course_node_numbers, course_node_numbers_nodes
-
-    @staticmethod
-    def init_weight_data(dataname):
-        """
-        ノード間Legの重み付けを読み込む
-        引数：
-            dataname ノード間Legの重み付けファイルへのパス
-        戻り値：
-            ノード間Legの重み付けデータ
-        """
-        f = open(dataname)
-        lines = f.readlines()
-        datalen = len(lines)
-        f.close()
-        data = np.zeros((datalen, datalen))
-        for j in range (datalen):
-            for i in range (datalen):
-                sp = lines[i].split()
-                data[i,j] = sp[j+1]
-        return data
-
-    # ノード座標データを読み込む
-    @staticmethod
-    def init_node_data(dataname):
-        """
-        ノード座標データを読み込む
-        引数：
-            dataname    ノード座標データファイル
-        戻り値：
-            ノード座標データ
-        """
-        f = open(dataname)
-        lines = f.readlines()
-        datalen = len(lines)
-        f.close()
-        data = np.zeros((datalen, 2))
-        for j in range (2):
-            for i in range (datalen):
-                sp = lines[i].split()
-                data[i,j] = sp[j+1]
-        return data
-
-    @staticmethod
-    def init_resistance_data(dataname, num):
-        """
-        箱庭倉庫俯瞰図のピクセル毎の走行抵抗（転がり抵抗）を読み込む
-        引数：
-            dataname    箱庭倉庫俯瞰図のピクセル毎の走行抵抗（転がり抵抗）データファイルへのパス
-            num         
-        戻り値：
-            箱庭倉庫俯瞰図のピクセル毎の走行抵抗（転がり抵抗）データ
-        """
-        f = open(dataname)
-        lines = f.readlines()
-        datalen = len(lines)
-        f.close()
-        data = np.zeros((datalen, num))
-        for j in range (num):
-            for i in range (datalen):
-                sp = lines[i].split()
-                data[i,j] = sp[j+1]
-        return data
-
-    @staticmethod
-    def init_beacon_data(dataname):
-        """
-        箱庭倉庫に設置されたstationary beacon 4基の箱庭座標系での設置位置座標を読み込む
-        引数：
-            dataname    箱庭倉庫に設置されたstationary beacon 4基の箱庭座標系での
-                        設置位置座標データファイルへのパス
-        戻り値：
-            箱庭倉庫に設置されたstationary beacon 4基の箱庭座標系での設置位置座標データ
-        """
-        f = open(dataname)
-        lines = f.readlines()
-        datalen = len(lines)
-        f.close()
-        data = np.zeros((datalen, 3))
-        data0 = []
-        for j in range (3):
-            for i in range (datalen):
-                sp = lines[i].split()
-                if j==0:
-                    data0.append(sp[0])
-                data[i,j] = sp[j+1]
-        return data0, data
-
-    @staticmethod
-    def course_line(node_numbers, node_list):
-        """
-        走行経路ノードリストを取得する。
-        引数：
-            node_numbers        周回路に含まれるコーナーノードリスト
-            node_list           コース上の全ノードのリスト
-        戻り値：
-            走行経路ノードリスト(np.array型)
-        """
-        coordinates = []
-        mysterious_offset = [12, 12]
-        for i in range(len(node_numbers)):
-            coordinates.append(node_list[node_numbers[i] - 1] + mysterious_offset)
-        return np.array(coordinates)
-
 class MapImageCreator:
     """
     Marvrelmind ビーコンから取得したセンサデータをもとに
@@ -302,7 +121,7 @@ class MapImageCreator:
         self.debug = debug
 
         self.image = np.zeros((120, 160,3))
-        self.garden_axis = [0, 0, -1*41]
+        self.garden_axis = init_garden_axis()
         self.head_address = None
         self.tail_address = None
         self.head_position = np.zeros((3, 1))
@@ -310,16 +129,16 @@ class MapImageCreator:
         self.head_distances = None
         self.tail_distances = None
 
-        self.course_node_numbers, self.course_node_numbers_nodes = CourseUtils.get_course_node_data(
+        self.course_node_numbers, self.course_node_numbers_nodes = get_course_node_data(
             course_type=self.cfg.COURSE_TYPE)
 
-        self.resistance_list = CourseUtils.init_resistance_data(
+        self.resistance_list = init_resistance_data(
             self.cfg.RESISTANCE_LIST_PATH, self.cfg.NUM_OF_GRID_X)
-        self.weight_list = CourseUtils.init_weight_data(self.cfg.WEIGHT_LIST_PATH)
-        self.node_list = CourseUtils.init_node_data(self.cfg.NODE_LIST_PATH)
-        self.beacon_address, self.beacon_position = CourseUtils.init_beacon_data(self.cfg.BEACON_LIST_PATH)
+        self.weight_list = init_weight_data(self.cfg.WEIGHT_LIST_PATH)
+        self.node_list = init_node_data(self.cfg.NODE_LIST_PATH)
+        self.beacon_address, self.beacon_position = init_beacon_data(self.cfg.BEACON_LIST_PATH)
 
-        self.color_list = CourseUtils.get_color_dict()
+        self.color_list = get_color_dict()
 
         self.rrmap_vision_img =  ResistanceMap(
             self.cfg.RESISTANCE_LIST_PATH, self.color_list).generateImageFile(self.cfg.VISION_BACKGROUND_PATH)
@@ -334,7 +153,7 @@ class MapImageCreator:
             self.weight_list, self.node_list, 
             self.cfg.BASE_MARGIN, self.cfg.LADDER_MARGIN, 1).create_1x1_landscape_vision_img_wide4(
                 self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y,
-                CourseUtils.course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
+                course_line(self.course_node_numbers_nodes, self.node_list), self.cfg.VISION_SCALE)
         #print('vision org array')
         #print(dk.utils.img_to_arr(self.vision_img_org))
         self.vision = self.vision_img_org.copy()
@@ -463,6 +282,162 @@ class MapImageCreator:
             print('[Tail]')
             print(self.tail_distances)
 
+    def updatedMobileBeaconPosition(self, distances):
+        """
+        Mobile Beaconから取得した Ultra Sound raw データ(引数：distances)を
+        もとに三角測量をおこない位置情報(X,Y,Z)に変換する。
+        引数：
+            distances       Mobile Beaconから取得した Ultra Sound raw データ
+        戻り値：
+            hedge_address   Mobile Beacon ID
+            hedge_position  三角測量によって算出したXYZ座標(nd.array型(3,1)形式)
+        """
+        # Chose three of four distance data
+        # for i in (1,len(beacon_address)):
+        # distances[2*i] = distances[2*i]/8  # in studs
+        shortest_distance = math.inf
+        for i in range(1, len(self.beacon_address) + 1):
+            if distances[2 * i] < shortest_distance:
+                shortest_distance = distances[2 * i]
+                excluded_address = distances[2 * i - 1]
+        if self.debug:
+            print('[PoseReader] B{:d}:{:f} excluded'.format(
+                excluded_address, shortest_distance))
+
+        # Rearrange the three distances of beacon addresses along clockwise
+        tri_distances = []
+        tri_beacon_address = []
+        tri_beacon_position = []
+        for j in range(len(self.beacon_address)):
+            for i in range(1, len(self.beacon_address) + 1):
+                if distances[2 * i - 1] != excluded_address:
+                    if distances[2 * i - 1] == int(self.beacon_address[j]):
+                        # print("beacon_address[{:d}] = {:s}".format(j, beacon_address[j]))
+                        tri_distances.append(distances[2 * i - 1])
+                        # tri_beacon_address.append(distances[2*i - 1])
+                        tri_distances.append(distances[2 * i] * 1000 / 8)
+                        tri_beacon_address.append(self.beacon_address[j])
+                        # print(beacon_position[j])
+                        tri_beacon_position.append(
+                            [
+                                self.beacon_position[j, 0],
+                                self.beacon_position[j, 1],
+                                self.beacon_position[j, 2]
+                            ])
+
+        if self.debug:
+            print('[PoseReader] Multilateration: B{:d}:{:.3f}, B{:d}:{:.3f}, B{:d}:{:.3f}'.format(
+                tri_distances[0], tri_distances[1], tri_distances[2], tri_distances[3],
+                tri_distances[4], tri_distances[5]))
+            print(tri_beacon_address)
+            print(tri_beacon_position)
+
+        # Cal
+        Leg_01 = math.sqrt((tri_beacon_position[1][0] - tri_beacon_position[0][0]) ** 2 + (
+                    tri_beacon_position[1][1] - tri_beacon_position[0][1]) ** 2 + (
+                                       tri_beacon_position[1][2] - tri_beacon_position[0][2]) ** 2)
+        Leg_02 = math.sqrt((tri_beacon_position[2][0] - tri_beacon_position[0][0]) ** 2 + (
+                    tri_beacon_position[2][1] - tri_beacon_position[0][1]) ** 2 + (
+                                       tri_beacon_position[2][2] - tri_beacon_position[0][2]) ** 2)
+        Leg_12 = math.sqrt((tri_beacon_position[2][0] - tri_beacon_position[1][0]) ** 2 + (
+                    tri_beacon_position[2][1] - tri_beacon_position[1][1]) ** 2 + (
+                                       tri_beacon_position[2][2] - tri_beacon_position[1][2]) ** 2)
+        if self.debug:
+            print('[PoseReader] Leg_01:{:3f} Leg_02:{:3f} Leg_12:{:3f}'.format(Leg_01, Leg_02, Leg_12))
+
+        COS_C0 = (Leg_01 ** 2 + Leg_02 ** 2 - Leg_12 ** 2) / (2 * Leg_01 * Leg_02)
+        U = Leg_01
+        VX = Leg_02 * COS_C0
+        VY = math.sqrt(Leg_02 ** 2 - VX ** 2)
+        V = math.sqrt(VX ** 2 + VY ** 2)
+        R0 = tri_distances[1]
+        R1 = tri_distances[3]
+        R2 = tri_distances[5]
+        if self.debug:
+            print('[PoseReader] U:{:f} VX:{:f} VY:{:f} V:{:f} R0:{:f} R1:{:f} R2:{:f}'.format(
+                U, VX, VY, V, R0, R1, R2))
+        P = []
+        PX = (R0 ** 2 - R1 ** 2 + U ** 2) / (2 * U)
+        PY = (R0 ** 2 - R2 ** 2 + V ** 2 - 2 * VX * PX) / (VY * 2)
+        # PZ cannot calculate when the z-distance is too small. it needs more than 300mm.
+        # PZ = math.sqrt(R0**2 - PX**2 - PY**2)
+        if R0 ** 2 - PX ** 2 - PY ** 2 <= 0:
+            PZ = 100
+        else:
+            PZ = math.sqrt(R0 ** 2 - PX ** 2 - PY ** 2)
+        if self.debug:
+            print('[PoseReader] PX:{:3f} PY:{:3f} PZ:{:3f}'.format(PX, PY, PZ))
+        P = [PX, PY, PZ]
+        if self.debug:
+            print(P)
+
+        # 座標変換
+        def make_rot_mat(positions):
+            # x = positions[1][0] - positions[0][0]
+            # y = positions[1][1] - positions[0][1]
+
+            x = positions[1][0] - positions[0][0]
+            y = positions[1][1] - positions[0][1]
+            leg = math.sqrt(x ** 2 + y ** 2)
+            if self.debug:
+                print('[PoseReader] x:{:f} y:{:f} leg:{:f} sin(y/leg):{:f} cos(x/leg):{:f}'.format(
+                    x, y, leg, np.sin(y / leg), np.cos(x / leg)))
+            # 採用されたベースライン（ベクトル）とビーコン座標系のｘ軸（ベクトル）とのなす角度をｚ軸に関して逆回転
+            # rot_matrix = [[np.cos(x/leg), np.sin(y/leg), 0], [-1*np.sin(y/leg), np.cos(x/leg), 0], [0, 0, 1]]
+            rot_matrix = [[x / leg, y / leg, 0], [-1 * y / leg, x / leg, 0], [0, 0, 1]]
+            rot_matrix = np.array(rot_matrix)
+            total_rot_matrix = rot_matrix
+
+            return total_rot_matrix
+
+        rotaion_matrix = make_rot_mat(tri_beacon_position)
+        if self.debug:
+            print(rotaion_matrix)
+        baseline_point = np.zeros((3, 1))
+        baseline_point[0, 0], baseline_point[1, 0], baseline_point[2, 0] = PX, PY, PZ  # in studs
+        if self.debug:
+            print(baseline_point)
+
+        # 逆回転
+        rotated_baseline_point = rotaion_matrix @ baseline_point
+        if self.debug:
+            print('[PoseReader] after back reverse:')
+            print(rotated_baseline_point)
+
+        x180_matrix = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]
+        x180_matrix = np.array(x180_matrix)
+        if self.debug:
+            print('[PoseReader] 180 now:')
+        rotated_baseline_point_180 = x180_matrix @ rotated_baseline_point
+        if self.debug:
+            print(rotated_baseline_point_180)
+
+        # 平行移動距離:Baseline座標系原点(tri_beacon_position)と箱庭座標系原点()の距離
+        Para = np.zeros((3, 1))
+        # for i in range(3):
+        #    Para[i,0] = garden_axis[i] - tri_beacon_position[0][i]
+        # Para[2,0] = 0
+
+        Para[0, 0], Para[1, 0], Para[2, 0] = \
+            self.garden_axis[0] - tri_beacon_position[0][0], \
+            self.garden_axis[1] -  tri_beacon_position[0][1], \
+            self.garden_axis[2] - tri_beacon_position[0][2]
+
+        # Para[0,0], Para[1,0], Para[2,0] = garden_axis[0] - tri_beacon_position[0][0], tri_beacon_position[0][1] - garden_axis[1], 0
+        if self.debug:
+            print('[PoseReader] translation distance:')
+            print(Para)
+            print('[PoseReader] after translation:')
+        updated_garden_point = np.zeros((3, 1))
+        updated_garden_point = rotated_baseline_point_180 - Para
+        if self.debug:
+            print(updated_garden_point)
+        # print("モバイルビーコン{:d}：x:{:f} y:{:f} z:{:f}".format(distances[0], updated_garden_point[0,0], updated_garden_point[1,0],updated_garden_point[2,0]))
+        # updated_point_list=[]
+        # for i in range(3):
+        #    updated_point_list.append(garden_point[i,0])
+        return distances[0], updated_garden_point
+
     def run(self):
 
         # ToDo
@@ -494,144 +469,7 @@ class MapImageCreator:
         self.tail_hedge.stop()
         sleep(self.cfg.WAIT_INTERVAL)
 
-    def updatedMobileBeaconPosition(self, distances):
-        # Chose three of four distance data
-        # for i in (1,len(beacon_address)):
-        # distances[2*i] = distances[2*i]/8  # in studs
-        shortest_distance = math.inf
-        for i in range(1, len(self.beacon_address) + 1):
-            if distances[2 * i] < shortest_distance:
-                shortest_distance = distances[2 * i]
-                excluded_address = distances[2 * i - 1]
-        if self.debug:
-            print("B{:d}:{:f} excluded".format(excluded_address, shortest_distance))
 
-        # Rearrange the three distances of beacon addresses along clockwise
-        tri_distances = []
-        tri_beacon_address = []
-        tri_beacon_position = []
-        for j in range(len(self.beacon_address)):
-            for i in range(1, len(self.beacon_address) + 1):
-                if distances[2 * i - 1] != excluded_address:
-                    if distances[2 * i - 1] == int(self.beacon_address[j]):
-                        # print("beacon_address[{:d}] = {:s}".format(j, beacon_address[j]))
-                        tri_distances.append(distances[2 * i - 1])
-                        # tri_beacon_address.append(distances[2*i - 1])
-                        tri_distances.append(distances[2 * i] * 1000 / 8)
-                        tri_beacon_address.append(self.beacon_address[j])
-                        # print(beacon_position[j])
-                        tri_beacon_position.append([self.beacon_position[j, 0], self.beacon_position[j, 1], self.beacon_position[j, 2]])
-
-        if self.debug:
-            print("Multilateration: B{:d}:{:.3f}, B{:d}:{:.3f}, B{:d}:{:.3f}".format(tri_distances[0], tri_distances[1],
-                                                                                 tri_distances[2], tri_distances[3],
-                                                                                 tri_distances[4], tri_distances[5]))
-            print(tri_beacon_address)
-            print(tri_beacon_position)
-
-        # Cal
-        Leg_01 = math.sqrt((tri_beacon_position[1][0] - tri_beacon_position[0][0]) ** 2 + (
-                    tri_beacon_position[1][1] - tri_beacon_position[0][1]) ** 2 + (
-                                       tri_beacon_position[1][2] - tri_beacon_position[0][2]) ** 2)
-        Leg_02 = math.sqrt((tri_beacon_position[2][0] - tri_beacon_position[0][0]) ** 2 + (
-                    tri_beacon_position[2][1] - tri_beacon_position[0][1]) ** 2 + (
-                                       tri_beacon_position[2][2] - tri_beacon_position[0][2]) ** 2)
-        Leg_12 = math.sqrt((tri_beacon_position[2][0] - tri_beacon_position[1][0]) ** 2 + (
-                    tri_beacon_position[2][1] - tri_beacon_position[1][1]) ** 2 + (
-                                       tri_beacon_position[2][2] - tri_beacon_position[1][2]) ** 2)
-        if self.debug:
-            print("Leg_01:{:3f} Leg_02:{:3f} Leg_12:{:3f}".format(Leg_01, Leg_02, Leg_12))
-
-        COS_C0 = (Leg_01 ** 2 + Leg_02 ** 2 - Leg_12 ** 2) / (2 * Leg_01 * Leg_02)
-        U = Leg_01
-        VX = Leg_02 * COS_C0
-        VY = math.sqrt(Leg_02 ** 2 - VX ** 2)
-        V = math.sqrt(VX ** 2 + VY ** 2)
-        R0 = tri_distances[1]
-        R1 = tri_distances[3]
-        R2 = tri_distances[5]
-        if self.debug:
-            print("U:{:f} VX:{:f} VY:{:f} V:{:f} R0:{:f} R1:{:f} R2:{:f}".format(U, VX, VY, V, R0, R1, R2))
-        P = []
-        PX = (R0 ** 2 - R1 ** 2 + U ** 2) / (2 * U)
-        PY = (R0 ** 2 - R2 ** 2 + V ** 2 - 2 * VX * PX) / (VY * 2)
-        # PZ cannot calculate when the z-distance is too small. it needs more than 300mm.
-        # PZ = math.sqrt(R0**2 - PX**2 - PY**2)
-        if R0 ** 2 - PX ** 2 - PY ** 2 <= 0:
-            PZ = 100
-        else:
-            PZ = math.sqrt(R0 ** 2 - PX ** 2 - PY ** 2)
-        if self.debug:
-            print("PX:{:3f} PY:{:3f} PZ:{:3f}".format(PX, PY, PZ))
-        P = [PX, PY, PZ]
-        if self.debug:
-            print(P)
-
-        # 座標変換
-        def make_rot_mat(positions):
-            # x = positions[1][0] - positions[0][0]
-            # y = positions[1][1] - positions[0][1]
-
-            x = positions[1][0] - positions[0][0]
-            y = positions[1][1] - positions[0][1]
-            leg = math.sqrt(x ** 2 + y ** 2)
-            if self.debug:
-                print("x:{:f} y:{:f} leg:{:f} sin(y/leg):{:f} cos(x/leg):{:f}".format(x, y, leg, np.sin(y / leg),
-                                                                                  np.cos(x / leg)))
-            # 採用されたベースライン（ベクトル）とビーコン座標系のｘ軸（ベクトル）とのなす角度をｚ軸に関して逆回転
-            # rot_matrix = [[np.cos(x/leg), np.sin(y/leg), 0], [-1*np.sin(y/leg), np.cos(x/leg), 0], [0, 0, 1]]
-            rot_matrix = [[x / leg, y / leg, 0], [-1 * y / leg, x / leg, 0], [0, 0, 1]]
-            rot_matrix = np.array(rot_matrix)
-            total_rot_matrix = rot_matrix
-
-            return total_rot_matrix
-
-        rotaion_matrix = make_rot_mat(tri_beacon_position)
-        if self.debug:
-            print(rotaion_matrix)
-        baseline_point = np.zeros((3, 1))
-        baseline_point[0, 0], baseline_point[1, 0], baseline_point[2, 0] = PX, PY, PZ  # in studs
-        if self.debug:
-            print(baseline_point)
-
-        # 逆回転
-        rotated_baseline_point = rotaion_matrix @ baseline_point
-        if self.debug:
-            print("逆回転後")
-            print(rotated_baseline_point)
-
-        x180_matrix = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]
-        x180_matrix = np.array(x180_matrix)
-        if self.debug:
-            print("180 now")
-        rotated_baseline_point_180 = x180_matrix @ rotated_baseline_point
-        if self.debug:
-            print(rotated_baseline_point_180)
-
-        # 平行移動距離:Baseline座標系原点(tri_beacon_position)と箱庭座標系原点()の距離
-        Para = np.zeros((3, 1))
-        # for i in range(3):
-        #    Para[i,0] = garden_axis[i] - tri_beacon_position[0][i]
-        # Para[2,0] = 0
-
-        Para[0, 0], Para[1, 0], Para[2, 0] = self.garden_axis[0] - tri_beacon_position[0][0], self.garden_axis[1] - \
-                                             tri_beacon_position[0][1], self.garden_axis[2] - tri_beacon_position[0][2]
-
-        # Para[0,0], Para[1,0], Para[2,0] = garden_axis[0] - tri_beacon_position[0][0], tri_beacon_position[0][1] - garden_axis[1], 0
-        if self.debug:
-            print("平行移動距離")
-            print(Para)
-        if self.debug:
-            print("平行移動後")
-        updated_garden_point = np.zeros((3, 1))
-        updated_garden_point = rotated_baseline_point_180 - Para
-        if self.debug:
-            print(updated_garden_point)
-        # print("モバイルビーコン{:d}：x:{:f} y:{:f} z:{:f}".format(distances[0], updated_garden_point[0,0], updated_garden_point[1,0],updated_garden_point[2,0]))
-        # updated_point_list=[]
-        # for i in range(3):
-        #    updated_point_list.append(garden_point[i,0])
-        return distances[0], updated_garden_point
 
     def get_torch_view(self, overall_view, torch_radius, pos_x, pos_y, rotate_angle, v_scale, view_width, view_height, offset_x, offset_y):
         # mobileの位置を中心として、半径rのアルファチャンネルを作る
@@ -660,16 +498,3 @@ class MapImageCreator:
         )
 
         return torch_view
-
-if __name__ == '__main__':
-    V = dk.vehicle.Vehicle()
-
-    V.add(MapImageCreator(), outputs=['cam/image_array'])
-
-    class PrintImage:
-        def run(self, image_array):
-            print('image_array = {}'.format(str(image_array)))
-
-    V.add(PrintImage(), inputs=['cam/image_array'])
-
-    V.start(rate_hz=20, max_loop_count=10000)
