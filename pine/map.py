@@ -110,7 +110,7 @@ class ImageCreator:
             self.mobile.loader[2].position[0, 0],
             self.mobile.loader[2].position[1, 0],
             self.mobile.loader[2].angle,
-            self.cfg.VISION_SCALE, self.cfg.VISION_SIZE_X, self.cfg.VISION_SIZE_Y,
+            self.cfg.VISION_SCALE, self.cfg.IMAGE_W, self.cfg.IMAGE_H,
             self.cfg.VISION_MARGIN_X, self.cfg.VISION_MARGIN_Y)
         if self.debug:
             print('[ImageCreator] next_vision_cropped_resized updated')
