@@ -34,7 +34,7 @@ def test_pine_double_hedges():
     V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
 
     try:
-        V.start(rate_hz=20, max_loop_count=720)
+        V.start(rate_hz=20, max_loop_count=3600)
     except KeyboardInterrupt:
         print('stopped')
 
@@ -60,7 +60,7 @@ def test_pine_realsense2():
     V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
 
     try:
-        V.start(rate_hz=20, max_loop_count=720)
+        V.start(rate_hz=20, max_loop_count=3600)
     except KeyboardInterrupt:
         print('stopped')
 
