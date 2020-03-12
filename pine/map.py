@@ -73,7 +73,7 @@ class ImageCreator:
         #self.vision = vision_img_org.copy()
 
         # Donkeycarパーツクラスの戻り値初期化：イメージ画像配列
-        self.image_array = np.zeros((cfg.VISION_SIZE_Y, cfg.VISION_SIZE_X, cfg.VISION_SIZE_Z))
+        self.image_array = np.zeros((cfg.IMAGE_H, cfg.IMAGE_W, cfg.IMAGE_DEPTH))
 
         print('[ImageCreator] init completed')
 
