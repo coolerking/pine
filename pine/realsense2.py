@@ -191,7 +191,7 @@ class PoseReader2:
         ang_x, ang_y, ang_z, \
         _, _ = self.camera.run_threaded()
         #pos_x, pos_y, angle = self.convert_pose(pos_x, pos_z, ang_z)
-        return pos_x, pos_y, pos_z, ang_x, ang_y, ang_z
+        return -pos_z, pos_x, pos_y, ang_x, ang_y, ang_z
 
     def run(self):
         """
