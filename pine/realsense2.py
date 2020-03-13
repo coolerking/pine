@@ -137,15 +137,11 @@ class PoseReader:
             pos_y       倉庫内位置情報(Y座標, 単位:studs)
             angle       倉庫内方向(単位:度)
         """
-        pos_x = convert_studs(float(-pos_z), unit='m') + convert_studs(self.offset_x, unit='cm')
-        print('pos_y')
-        print('  pos_x={:.3f}m'.format(pos_x))
-        print('       ={:.3f}studs'.format(convert_studs(float(pos_x), unit='m')))
-        print('  offset_y={:.3f}studs'.format(convert_studs(self.offset_y, unit='cm')))
-        pos_y = convert_studs(float(pos_x), unit='m') + convert_studs(self.offset_y, unit='cm')
+        x = convert_studs(float(-pos_z), unit='m') + convert_studs(self.offset_x, unit='cm')
+        y = convert_studs(float(pos_x), unit='m') + convert_studs(self.offset_y, unit='cm')
         #pos_z = convert_studs(float(pos_y), unit='m') + convert_studs(self.offset_z, unit='cm')
         angle = ang_z + self.offset_angle
-        return pos_x, pos_y, angle
+        return x, y, angle
 
 '''
 class PoseReader2:

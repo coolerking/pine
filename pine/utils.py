@@ -207,7 +207,7 @@ def convert_studs(value, unit='m'):
     if unit == 'cm':
         return float(float(value)*10.0/8.0)
     elif unit == 'm':
-        return float(float(value)*10.0*100.0/8.0)
+        return float( (float(value)*1000.0) /8.0)
     elif unit == 'mm':
         return float(float(value)/8.0)
     else:
