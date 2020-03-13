@@ -83,6 +83,8 @@ class PoseReader:
         _, _, ang_z, \
         _, _ = self.camera.run_threaded()
         pos_x, pos_y, angle = self.convert_pose(pos_x, pos_z, ang_z)
+        if self.debug:
+            print('{}, {}, {}'.format(str(pos_x), str(pos_y), str(angle)))
         return pos_x, pos_y, angle
 
     def run(self):
@@ -134,12 +136,13 @@ class PoseReader:
             pos_y       倉庫内位置情報(Y座標, 単位:studs)
             angle       倉庫内方向(単位:度)
         """
-        pos_x = convert_studs(float(pos_z) * (-1.0), unit='m') + self.offset_x
-        pos_y = convert_studs(float(pos_x), unit='m') + self.offset_y
-        #pos_z = convert_studs(float(pos_y) * (-1.0), unit='m') + self.offset_z
-        angle = math.degrees(ang_z + self.offset_angle)
+        pos_x = convert_studs(float(-pos_z), unit='m') + convert_studs(self.offset_x, unit='cm')
+        pos_y = convert_studs(float(pos_x), unit='m') + convert_studs(self.offset_y, unit='cm')
+        #pos_z = convert_studs(float(pos_y), unit='m') + convert_studs(self.offset_z, unit='cm')
+        angle = ang_z + self.offset_angle
         return pos_x, pos_y, angle
 
+'''
 class PoseReader2:
     """
     Intel RealSense Tracking Camera T265 からImageCreatorの入力データ
@@ -231,7 +234,7 @@ class PoseReader2:
             なし
         """
         self.camera.shutdown()
-
+'''
 class T265:
     '''
     Intel RealSense Tracking Camera T265 から全センサデータを取得する

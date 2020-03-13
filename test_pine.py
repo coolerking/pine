@@ -68,17 +68,13 @@ def test_pine_rs():
     cfg = dk.load_config()
     V = dk.vehicle.Vehicle()
     
-    from pine.realsense2 import PoseReader2
-    V.add(PoseReader2(cfg), outputs=['pose/x', 'pose/y', 'pose/z', 'pose/ang_x', 'pose/ang_y', 'pose/ang_z'])
+    from pine.realsense2 import PoseReader
+    V.add(PoseReader(cfg), outputs=['pose/x', 'pose/y', 'pose/angle'])
 
-    class Prt:
-        def run(self, x, y, z, ax, ay, az):
-            print('{:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}'.format(x, y, z, ax, ay, az))
-
-    V.add(Prt(), inputs=['pose/x', 'pose/y', 'pose/z', 'pose/ang_x', 'pose/ang_y', 'pose/ang_z'])
+    V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
 
     try:
-        V.start(rate_hz=20, max_loop_count=3600)
+        V.start(rate_hz=20, max_loop_count=7200)
     except KeyboardInterrupt:
         print('stopped')
 
