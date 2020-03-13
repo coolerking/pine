@@ -47,7 +47,8 @@ class PoseReader:
         self.offset_x = convert_studs(cfg.START_X_CM, unit='cm')
         self.offset_y = convert_studs(cfg.START_Y_CM, unit='cm')
         self.offset_z = convert_studs(cfg.START_Z_CM, unit='cm')
-        self.offset_angle = math.radians(cfg.START_ANGLE_DEGREES)
+        self.offset_angle = cfg.START_ANGLE_DEGREES
+        print('[OFFSET] {:.3f},{:.3f},{:.3f},{:.3f}'.format(self.offset_x, self.offset_y, self.offset_z, self.offset_angle))
         self.camera = T265(image_output=False, wait_secs=cfg.WAIT_INTERVAL, debug=debug)
     
     def update(self):
@@ -137,6 +138,10 @@ class PoseReader:
             angle       倉庫内方向(単位:度)
         """
         pos_x = convert_studs(float(-pos_z), unit='m') + convert_studs(self.offset_x, unit='cm')
+        print('pos_y')
+        print('  pos_x={:.3f}m'.format(pos_x))
+        print('       ={:.3f}studs'.format(convert_studs(float(pos_x), unit='m')))
+        print('  offset_y={:.3f}studs'.format(convert_studs(self.offset_y, unit='cm')))
         pos_y = convert_studs(float(pos_x), unit='m') + convert_studs(self.offset_y, unit='cm')
         #pos_z = convert_studs(float(pos_y), unit='m') + convert_studs(self.offset_z, unit='cm')
         angle = ang_z + self.offset_angle
