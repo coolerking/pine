@@ -79,10 +79,10 @@ def test_pine_rs():
         print('stopped')
 
 if __name__ == '__main__':
-    #print('[start] double hedges')
-    #test_pine_double_hedges()
-    #sleep(5.0)
-    #print('[start] realsense2')
-    #test_pine_realsense2()
+    print('[start] double hedges')
+    test_pine_double_hedges()
+    sleep(5.0)
+    print('[start] realsense2')
+    test_pine_realsense2()
 
-    test_pine_rs()
+    #test_pine_rs()
