@@ -249,7 +249,7 @@ TAIL_HEDGE_TTY = '/dev/ttyACM1'
 START_X_CM = 23.0
 START_Y_CM = 15.0
 START_Z_CM = 0.0
-START_ANGLE_DEGREES = -90.0
+START_ANGLE_DEGREES = 90.0 #at first -90.0
 #
 # MapImageCreator
 #
