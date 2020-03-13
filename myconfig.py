@@ -246,8 +246,8 @@ TAIL_HEDGE_TTY = '/dev/ttyACM1'
 #
 # realsense PoseReader
 #
-START_X_CM = 16.0
-START_Y_CM = 16.0
+START_X_CM = 23.0
+START_Y_CM = 15.0
 START_Z_CM = 0.0
 START_ANGLE_DEGREES = -90.0
 #
