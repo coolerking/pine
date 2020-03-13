@@ -69,7 +69,7 @@ def test_pine_rs():
     V = dk.vehicle.Vehicle()
     
     from pine.realsense2 import PoseReader2
-    V.add(PoseReader(cfg), outputs=['pose/x', 'pose/y', 'pose/z', 'pose/ang_x', 'pose/ang_y', 'pose/ang_z'])
+    V.add(PoseReader2(cfg), outputs=['pose/x', 'pose/y', 'pose/z', 'pose/ang_x', 'pose/ang_y', 'pose/ang_z'])
 
     class Prt:
         def run(self, x, y, z, ax, ay, az):
