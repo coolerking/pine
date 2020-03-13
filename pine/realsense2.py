@@ -194,7 +194,8 @@ class PoseReader2:
         #          y            -x
         #return -pos_z, pos_x, pos_y, ang_x, ang_y, ang_z
         #return -pos_y, -pos_z, pos_x, ang_x, ang_y, ang_z
-        return -pos_x, -pos_y, -pos_z, ang_x, ang_y, ang_z
+        #return -pos_x, -pos_y, -pos_z, ang_x, ang_y, ang_z
+        return pos_z, -pos_x, -pos_y, ang_x, ang_y, ang_z
 
     def run(self):
         """
