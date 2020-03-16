@@ -94,7 +94,7 @@ def test_pose():
     class CopyImage:
         def run(self, image_array):
             return image_array
-    V.add(CopyImage(), inputs=['cam/real/image_array'], outputs={'cam/image_array'})
+    V.add(CopyImage(), inputs=['cam/real/image_array'], outputs=['cam/image_array'])
 
     import os
     from donkeycar.parts.datastore import TubHandler
@@ -115,7 +115,7 @@ def test_pose():
         inputs=['pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
         outputs=['cam/hedge/image_array'])
 
-    V.add(CopyImage(), inputs=['cam/hedge/image_array'], outputs={'cam/image_array'})
+    V.add(CopyImage(), inputs=['cam/hedge/image_array'], outputs=['cam/image_array'])
 
     os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
