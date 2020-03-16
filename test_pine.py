@@ -82,6 +82,7 @@ def test_pine_rs():
 def test_pose():
     cfg = dk.load_config()
     V = dk.vehicle.Vehicle()
+    V.mem['user/mode'] = 'user'
 
     from pine.realsense2 import PoseReader
     V.add(PoseReader(cfg), outputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'])
@@ -95,14 +96,18 @@ def test_pose():
         def run(self, image_array):
             return image_array
     V.add(CopyImage(), inputs=['cam/real/image_array'], outputs=['cam/image_array'])
+    V.add(CopyImage(), inputs=['pose/real/x'], outputs=['user/angle'])
+    V.add(CopyImage(), inputs=['pose/real/y'], outputs=['user/throttle'])
 
     import os
     from donkeycar.parts.datastore import TubHandler
     os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
     tub = th.new_tub_writer(
-        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'],
-        types=['image_array', 'float', 'float', 'float'], user_meta={})
+        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle',
+        'user/angle', 'user/throttle', 'user/mode'],
+        types=['image_array', 'float', 'float', 'float',
+        'float', 'float', 'str'], user_meta={})
     V.add(tub,
         inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'], 
         outputs=["tub/real/num_records"])
@@ -116,12 +121,16 @@ def test_pose():
         outputs=['cam/hedge/image_array'])
 
     V.add(CopyImage(), inputs=['cam/hedge/image_array'], outputs=['cam/image_array'])
+    V.add(CopyImage(), inputs=['pose/hedge/x'], outputs=['user/angle'])
+    V.add(CopyImage(), inputs=['pose/hedge/y'], outputs=['user/throttle'])
 
     os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
     tub = th.new_tub_writer(
-        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'],
-        types=['image_array', 'float', 'float', 'float'], user_meta={})
+        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle',
+        'user/angle', 'user/throttle', 'user/mode'],
+        types=['image_array', 'float', 'float', 'float',
+        'float', 'float', 'str'], user_meta={})
     V.add(tub,
         inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
         outputs=["tub/hedge/num_records"])
