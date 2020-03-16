@@ -131,7 +131,8 @@ def test_pose():
 
     try:
         V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
-            max_loop_count=10000) #cfg.MAX_LOOPS)
+            #max_loop_count=10000) 
+            max_loop_count=cfg.MAX_LOOPS)
     except KeyboardInterrupt:
         print('stopped')
 
