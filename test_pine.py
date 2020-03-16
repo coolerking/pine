@@ -60,7 +60,8 @@ def test_pine_realsense2():
     V.add(PrintPose(), inputs=['pose/x', 'pose/y', 'pose/angle'])
 
     try:
-        V.start(rate_hz=20, max_loop_count=10000)
+        V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
+            max_loop_count=cfg.MAX_LOOPS)
     except KeyboardInterrupt:
         print('stopped')
 
@@ -78,11 +79,69 @@ def test_pine_rs():
     except KeyboardInterrupt:
         print('stopped')
 
+def test_pose():
+    cfg = dk.load_config()
+    V = dk.vehicle.Vehicle()
+
+    from pine.realsense2 import PoseReader
+    V.add(PoseReader(cfg), outputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'])
+
+    from pine.map import ImageCreator
+    V.add(ImageCreator(cfg),
+        inputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'], 
+        outputs=['cam/real/image_array'])
+
+    import os
+    from donkeycar.parts.datastore import TubHandler
+    os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
+    th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
+    tub = th.new_tub_writer(
+        inputs=['cam/real/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'],
+        types=['image_array', 'float', 'float', 'float'], user_meta={})
+    V.add(tub,
+        inputs=['cam/real/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'], 
+        outputs=["tub/real/num_records"])
+
+    from pine.double_hedges import PoseReader
+    V.add(PoseReader(cfg), outputs=['pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'])
+
+    from pine.map import ImageCreator
+    V.add(ImageCreator(cfg),
+        inputs=['pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
+        outputs=['cam/hedge/image_array'])
+
+    os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    tub = th.new_tub_writer(
+        inputs=['cam/hedge/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'],
+        types=['image_array', 'float', 'float', 'float'], user_meta={})
+    V.add(tub,
+        inputs=['cam/hedge/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
+        outputs=["tub/hedge/num_records"])
+
+    class PrintBoth:
+        def __init__(self):
+            print('hedge_x, hedge_y, hedge_angle, real_x, real_y, real_angle')
+        def run(self, hx, hy, ha, rx, ry, ra):
+            print('{:3f},{:.3f},{:3f},{:3f},{:.3f},{:3f}'.format(hx, hy, ha, rx, ry, ra))
+    V.add(PrintBoth(), inputs=[
+        'pose/real/x', 'pose/real/y', 'pose/real/angle', 
+        'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'])
+
+
+    try:
+        V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
+            max_loop_count=10000) #cfg.MAX_LOOPS)
+    except KeyboardInterrupt:
+        print('stopped')
+
 if __name__ == '__main__':
+    '''
     print('[start] double hedges')
     test_pine_double_hedges()
     sleep(5.0)
     print('[start] realsense2')
     test_pine_realsense2()
-
+    '''
     #test_pine_rs()
+    test_pose()
