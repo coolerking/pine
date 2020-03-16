@@ -109,7 +109,8 @@ def test_pose():
         types=['image_array', 'float', 'float', 'float',
         'float', 'float', 'str'], user_meta={})
     V.add(tub,
-        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'], 
+        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle',
+        'user/angle', 'user/throttle', 'user/mode'], 
         outputs=["tub/real/num_records"])
 
     from pine.double_hedges import PoseReader
@@ -132,7 +133,8 @@ def test_pose():
         types=['image_array', 'float', 'float', 'float',
         'float', 'float', 'str'], user_meta={})
     V.add(tub,
-        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
+        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle',
+        'user/angle', 'user/throttle', 'user/mode'], 
         outputs=["tub/hedge/num_records"])
 
     class PrintBoth:
