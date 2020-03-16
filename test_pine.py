@@ -91,15 +91,20 @@ def test_pose():
         inputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'], 
         outputs=['cam/real/image_array'])
 
+    class CopyImage:
+        def run(self, image_array):
+            return image_array
+    V.add(CopyImage(), inputs=['cam/real/image_array'], outputs={'cam/image_array'})
+
     import os
     from donkeycar.parts.datastore import TubHandler
     os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
     tub = th.new_tub_writer(
-        inputs=['cam/real/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'],
+        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'],
         types=['image_array', 'float', 'float', 'float'], user_meta={})
     V.add(tub,
-        inputs=['cam/real/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'], 
+        inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle'], 
         outputs=["tub/real/num_records"])
 
     from pine.double_hedges import PoseReader
@@ -110,13 +115,15 @@ def test_pose():
         inputs=['pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
         outputs=['cam/hedge/image_array'])
 
+    V.add(CopyImage(), inputs=['cam/hedge/image_array'], outputs={'cam/image_array'})
+
     os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
     tub = th.new_tub_writer(
-        inputs=['cam/hedge/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'],
+        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'],
         types=['image_array', 'float', 'float', 'float'], user_meta={})
     V.add(tub,
-        inputs=['cam/hedge/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
+        inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle'], 
         outputs=["tub/hedge/num_records"])
 
     class PrintBoth:
