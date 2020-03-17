@@ -101,7 +101,10 @@ def test_pose():
 
     import os
     from donkeycar.parts.datastore import TubHandler
-    os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
+    try:
+        os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
+    except FileExistsError:
+        print('data/real already exists')
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle',
@@ -125,7 +128,11 @@ def test_pose():
     V.add(CopyImage(), inputs=['pose/hedge/x'], outputs=['user/angle'])
     V.add(CopyImage(), inputs=['pose/hedge/y'], outputs=['user/throttle'])
 
-    os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    try:
+        os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    except FileExistsError:
+        print('data/hedge already exists')
+
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle',
