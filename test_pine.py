@@ -177,7 +177,7 @@ def test_angle():
     cfg = dk.load_config()
     V = dk.vehicle.Vehicle()
 
-    '''
+    
     from pine.realsense2 import PoseReader
     V.add(PoseReader(cfg), outputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'])
 
@@ -187,7 +187,7 @@ def test_angle():
     V.add(PoseReader(cfg), outputs=['pose/hedges/x', 'pose/hedges/y', 'pose/hedges/angle'])
 
     V.add(PrintPose(), inputs=['pose/hedges/x', 'pose/hedges/y', 'pose/hedges/angle'])
-
+    '''
     try:
         V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
             #max_loop_count=10000) 
