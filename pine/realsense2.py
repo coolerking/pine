@@ -140,7 +140,7 @@ class PoseReader:
         x = convert_studs(float(-pos_z), unit='m') + convert_studs(self.offset_x, unit='cm')
         y = convert_studs(float(pos_x), unit='m') + convert_studs(self.offset_y, unit='cm')
         #pos_z = convert_studs(float(pos_y), unit='m') + convert_studs(self.offset_z, unit='cm')
-        angle = ang_z + self.offset_angle
+        angle = float((float(ang_z) * float(-1.0)) + float(self.offset_angle))
         return x, y, angle
 
 class T265:
