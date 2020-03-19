@@ -183,7 +183,7 @@ def test_angle():
     from pine.double_hedges import PoseReader
     V.add(PoseReader(cfg), outputs=['pose/hedges/x', 'pose/hedges/y', 'pose/hedges/angle'])
 
-    V.add(PrintPose(), inputs=[['pose/hedges/x', 'pose/hedges/y', 'pose/hedges/angle'])
+    V.add(PrintPose(), inputs=['pose/hedges/x', 'pose/hedges/y', 'pose/hedges/angle'])
 
     try:
         V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
