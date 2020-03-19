@@ -81,11 +81,15 @@ class PoseReader:
         self.tail_hedge.start()
 
         # 両方のMobile Beaconからdistaces(raw)を取得するまで待機
+        count = 0
         while(self.head_distances is None or self.tail_distances is None):
             if self.debug:
                 print('[PoseReader] no distances yet, wait {} sec.'.format(
                     str(self.cfg.WAIT_INTERVAL)))
             sleep(self.cfg.WAIT_INTERVAL)
+            count += 1
+            if count > 20:
+                raise TimeoutError('[PoseReader] firts distances data did not arraived, please set agent within marvelmind beacons')
         
         # cfg オブジェクトで指定したIDと異なる場合は例外発生
         if self.cfg.HEAD_HEDGE_ID == self.head_address and \

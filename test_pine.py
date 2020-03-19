@@ -23,7 +23,10 @@ def test_pine_double_hedges():
     V.add(ImageCreator(cfg), inputs=['pose/x', 'pose/y', 'pose/angle'], outputs=['cam/image_array'])
 
     from donkeycar.parts.datastore import TubHandler
-    th = TubHandler(path=cfg.DATA_PATH)
+    try:
+        th = TubHandler(path=cfg.DATA_PATH)
+    except:
+        raise
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/x', 'pose/y', 'pose/angle'],
         types=['image_array', 'float', 'float', 'float'], user_meta={})
@@ -49,7 +52,10 @@ def test_pine_realsense2():
     V.add(ImageCreator(cfg), inputs=['pose/x', 'pose/y', 'pose/angle'], outputs=['cam/image_array'])
 
     from donkeycar.parts.datastore import TubHandler
-    th = TubHandler(path=cfg.DATA_PATH)
+    try:
+        th = TubHandler(path=cfg.DATA_PATH)
+    except:
+        raise
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/x', 'pose/y', 'pose/angle'],
         types=['image_array', 'float', 'float', 'float'], user_meta={})
@@ -62,7 +68,7 @@ def test_pine_realsense2():
     try:
         V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
             max_loop_count=cfg.MAX_LOOPS)
-    except KeyboardInterrupt:
+    except:
         print('stopped')
 
 def test_pine_rs():
@@ -103,9 +109,12 @@ def test_pose():
     from donkeycar.parts.datastore import TubHandler
     try:
         os.makedirs(os.path.join(cfg.CAR_PATH, 'data/real'))
-    except FileExistsError:
+    except:
         print('data/real already exists')
-    th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
+    try:
+        th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/real'))
+    except:
+        raise
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/real/x', 'pose/real/y', 'pose/real/angle',
         'user/angle', 'user/throttle', 'user/mode'],
@@ -130,7 +139,7 @@ def test_pose():
 
     try:
         os.makedirs(os.path.join(cfg.CAR_PATH, 'data/hedge'))
-    except FileExistsError:
+    except:
         print('data/hedge already exists')
 
     th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
@@ -158,8 +167,25 @@ def test_pose():
         V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
             #max_loop_count=10000) 
             max_loop_count=cfg.MAX_LOOPS)
-    except KeyboardInterrupt:
+    except:
         print('stopped')
+
+def test_angle():
+    cfg = dk.load_config()
+    V = dk.vehicle.Vehicle()
+
+    from pine.realsense2 import PoseReader
+    V.add(PoseReader(cfg), outputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'])
+
+    V.add(PrintPose(), inputs=['pose/real/x', 'pose/real/y', 'pose/real/angle'])
+
+    try:
+        V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
+            #max_loop_count=10000) 
+            max_loop_count=cfg.MAX_LOOPS)
+    except:
+        print('stopped')
+        raise
 
 if __name__ == '__main__':
     '''
@@ -170,4 +196,5 @@ if __name__ == '__main__':
     test_pine_realsense2()
     '''
     #test_pine_rs()
-    test_pose()
+    #test_pose()
+    test_angle()
