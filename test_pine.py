@@ -142,7 +142,10 @@ def test_pose():
     except:
         print('data/hedge already exists')
 
-    th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    try:
+        th = TubHandler(path=os.path.join(cfg.CAR_PATH, 'data/hedge'))
+    except:
+        raise
     tub = th.new_tub_writer(
         inputs=['cam/image_array', 'pose/hedge/x', 'pose/hedge/y', 'pose/hedge/angle',
         'user/angle', 'user/throttle', 'user/mode'],
